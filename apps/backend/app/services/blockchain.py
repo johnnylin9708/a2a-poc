@@ -103,7 +103,7 @@ class BlockchainService:
             signed_tx = self.w3.eth.account.sign_transaction(tx, private_key)
             
             # Send transaction
-            tx_hash = self.w3.eth.send_raw_transaction(signed_tx.raw_transaction)  # 改为 raw_transaction
+            tx_hash = self.w3.eth.send_raw_transaction(signed_tx.raw_transaction)  # Changed to raw_transaction
             logger.info(f"📤 Transaction sent: {tx_hash.hex()}")
             
             # Wait for receipt
@@ -203,12 +203,12 @@ class BlockchainService:
             raise ValueError("Reputation Registry not initialized")
         
         try:
-            # 确保 payment_proof 是 32 字节
+            # Ensure payment_proof is 32 bytes
             if len(payment_proof) < 32:
-                # 填充到 32 字节
+                # Pad to 32 bytes
                 payment_proof = payment_proof + b'\x00' * (32 - len(payment_proof))
             elif len(payment_proof) > 32:
-                # 截断到 32 字节
+                # Truncate to 32 bytes
                 payment_proof = payment_proof[:32]
             
             tx = self.reputation_registry.functions.submitFeedback(
@@ -219,13 +219,13 @@ class BlockchainService:
             ).build_transaction({
                 'from': reviewer_address,
                 'nonce': self.w3.eth.get_transaction_count(reviewer_address),
-                'gas': 3000000,  # 增加 gas limit
+                'gas': 3000000,  # Increased gas limit
                 'gasPrice': self.w3.eth.gas_price,
                 'chainId': self.chain_id
             })
             
             signed_tx = self.w3.eth.account.sign_transaction(tx, private_key)
-            tx_hash = self.w3.eth.send_raw_transaction(signed_tx.raw_transaction)  # 改为 raw_transaction
+            tx_hash = self.w3.eth.send_raw_transaction(signed_tx.raw_transaction)  # Changed to raw_transaction
             tx_receipt = self.w3.eth.wait_for_transaction_receipt(tx_hash)
             
             logger.info(f"✅ Feedback submitted for agent {agent_id} (tx: {tx_hash.hex()})")

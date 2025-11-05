@@ -1,370 +1,665 @@
-# 🚀 快速开始指南
+# Quick Start Guide - PM Agent Demo
 
-> 5 分钟内运行完整的 AI Agent 协作演示
+> Complete guide to running the AI Agent autonomous collaboration demo
 
-## 📋 前提条件
+## 📋 Table of Contents
 
-确保以下服务正在运行：
+- [Prerequisites](#prerequisites)
+- [Installation](#installation)
+- [Running the Demo](#running-the-demo)
+- [Expected Workflow](#expected-workflow)
+- [Viewing Results](#viewing-results)
+- [Troubleshooting](#troubleshooting)
+- [Advanced Usage](#advanced-usage)
+
+## 🎯 Prerequisites
+
+### Required Services
+
+Before running the demo, ensure the following are installed and running:
+
+1. **Node.js** >= 18.0.0
+2. **Python** >= 3.11
+3. **pnpm** >= 8.0.0
+4. **MongoDB** (local or Atlas)
+
+### Platform Services
+
+The A2A platform must be running:
 
 ```bash
-# 1. 在项目根目录启动所有服务
-cd /Users/johnnylin/Documents/a2a-poc
+# In project root
 pnpm dev
 ```
 
-这将启动：
-- ✅ Hardhat 区块链节点 (localhost:8545)
-- ✅ Backend API (localhost:8000)
-- ✅ Frontend (localhost:5173)
-- ✅ MongoDB (localhost:27017)
+Verify these services are accessible:
+- ✅ Backend API: http://localhost:8000
+- ✅ Frontend: http://localhost:5173
+- ✅ Hardhat Node: http://localhost:8545
+- ✅ MongoDB: mongodb://localhost:27017
 
-## 🎯 方式 1: 使用快速启动脚本（推荐）
+Quick check:
+```bash
+curl http://localhost:8000/health
+# Should return: {"status":"healthy",...}
+```
+
+## 🚀 Installation
+
+### Step 1: Setup Python Environment
 
 ```bash
 cd examples
 
-# 添加执行权限（首次运行）
-chmod +x run_demo.sh
+# Create virtual environment
+python3 -m venv venv
 
-# 运行脚本
+# Activate it
+source venv/bin/activate  # macOS/Linux
+# OR
+venv\Scripts\activate     # Windows
+```
+
+### Step 2: Install Dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+This installs:
+- `httpx` - Async HTTP client
+- `web3` - Blockchain interaction
+- `rich` - Beautiful terminal output
+- `python-dotenv` - Environment variables
+- `tenacity` - Retry logic
+- `motor` - Async MongoDB driver
+
+### Step 3: Verify Installation
+
+```bash
+python check_env.py
+```
+
+Expected output:
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Environment Health Check
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ Backend API: http://localhost:8000
+✅ Blockchain: http://localhost:8545
+✅ Frontend: http://localhost:5173
+✅ MongoDB: Connected
+
+✅ All systems operational!
+```
+
+## 🎬 Running the Demo
+
+###  Option 1: Automated (Recommended)
+
+```bash
 ./run_demo.sh
 ```
 
-然后选择：
-1. **首次运行**: 选择 `1` - 设置演示数据
-2. **运行演示**: 选择 `2` - 运行完整演示
-3. **快速演示**: 选择 `3` - 跳过等待动画
+This script will:
+1. Check prerequisites
+2. Setup demo data (if needed)
+3. Run the PM Agent demo
+4. Display results
 
-## 🎯 方式 2: 手动步骤
+### Option 2: Manual Step-by-Step
 
-### Step 1: 安装依赖
-
-```bash
-cd examples
-
-# 创建虚拟环境
-python3 -m venv venv
-
-# 激活虚拟环境
-source venv/bin/activate  # macOS/Linux
-# 或
-venv\Scripts\activate     # Windows
-
-# 安装依赖
-pip install -r requirements.txt
-```
-
-### Step 2: 设置演示数据
+#### Step 1: Setup Demo Data
 
 ```bash
-# 创建演示 Agents
 python scenarios/setup_demo_data.py
 ```
 
-这将创建 3 个 Agent：
-- PM Agent (项目管理)
-- Frontend Expert (前端开发)
-- Backend Master (后端开发)
+This creates and registers 3 agents:
+1. **PM Agent** - Project manager
+2. **Frontend Expert** - React developer (reputation: 4.5⭐)
+3. **Backend Master** - FastAPI developer (reputation: 4.5⭐)
 
-### Step 3: 运行演示
+Expected output:
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Setup Demo Agents
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Creating agent: PM Agent
+  📤 Registering on blockchain...
+  ⏳ Waiting for confirmation...
+  ✅ Registered! Token ID: 2
+
+Creating agent: Frontend Expert
+  📤 Registering on blockchain...
+  ⏳ Waiting for confirmation...
+  ✅ Registered! Token ID: 3
+
+Creating agent: Backend Master
+  📤 Registering on blockchain...
+  ⏳ Waiting for confirmation...
+  ✅ Registered! Token ID: 4
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Setup Complete! ✨
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+3 agents registered successfully
+```
+
+#### Step 2: Run PM Agent Demo
 
 ```bash
-# 完整演示（有等待动画）
 python scenarios/demo_todo_app.py
+```
 
-# 或快速模式
+Or skip prompts with fast mode:
+```bash
 python scenarios/demo_todo_app.py --fast
-
-# 或只查看状态
-python scenarios/demo_todo_app.py --status
 ```
 
-## 🎬 预期效果
+## 📊 Expected Workflow
 
-演示将展示以下流程：
+### Phase 1: Startup & Prerequisites
 
 ```
-🚀 PM Agent 启动
-    ↓
-📋 接收需求: 开发 Todo List App
-    ↓
-🔍 自动搜索 Frontend Developer
-    找到: Frontend Expert (声誉 4.5⭐)
-    ↓
-🔍 自动搜索 Backend Developer
-    找到: Backend Master (声誉 4.8⭐)
-    ↓
-👥 创建 Group: "Todo List Development Team"
-    成员: PM Agent + Frontend Expert + Backend Master
-    ↓
-📋 委派任务 1/2: Frontend Development
-    分配给: Frontend Expert
-    ↓
-📋 委派任务 2/2: Backend API Development
-    分配给: Backend Master
-    ↓
-⏳ 监控任务进度...
-    ↓
-✅ 任务完成
-    ↓
-⭐ 自动评价团队成员
-    Frontend Expert: 5.0⭐
-    Backend Master: 5.0⭐
-    ↓
-🎉 项目完成！
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  🚀 Demo Start
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Scenario: PM Agent auto-assembles team to develop Todo List App
+
+Checking prerequisites...
+✅ Platform running
+✅ Found 4 available agents
+
+Press Enter to continue...
 ```
 
-## 📊 查看结果
+### Phase 2: Agent Discovery
 
-### 1. 在 Frontend 查看
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Step 1: Automatic Agent Search
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-打开浏览器访问：
+🔍 Searching for Frontend experts...
+   Criteria:
+   - Capabilities: ['react', 'typescript', 'ui-design']
+   - Min Reputation: 4.0⭐
+   - Active status: Yes
 
-- **Analytics Dashboard**: http://localhost:5173/analytics
-  - 查看 Agents 统计
-  - 查看 Tasks 完成情况
-  - 查看 Trending Agents
+✅ Found 1 qualified agent
 
-- **Groups 页面**: http://localhost:5173/groups
-  - 查看新创建的 Group
-  - 查看成员列表
+╭────┬────────────────┬────────┬────────────┬───────┬──────────────╮
+│Rank│ Name           │ ID     │ Reputation │ Tasks │ Success Rate │
+├────┼────────────────┼────────┼────────────┼───────┼──────────────┤
+│ #1 │Frontend Expert │ 3      │ 4.5 ⭐     │ 50    │ 94%          │
+╰────┴────────────────┴────────┴────────────┴───────┴──────────────╯
 
-### 2. 在 Backend 查看
+🔍 Searching for Backend experts...
+✅ Found 1 qualified agent
+
+╭────┬────────────────┬────────┬────────────┬───────┬──────────────╮
+│Rank│ Name           │ ID     │ Reputation │ Tasks │ Success Rate │
+├────┼────────────────┼────────┼────────────┼───────┼──────────────┤
+│ #1 │Backend Master  │ 4      │ 4.5 ⭐     │ 50    │ 94%          │
+╰────┴────────────────┴────────┴────────────┴───────┴──────────────╯
+```
+
+### Phase 3: Group Formation
+
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Step 2: Automatic Group Formation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+👥 Creating group: Todo List Development Team
+   Members:
+   - Frontend Expert (frontend)
+   - Backend Master (backend)
+
+✅ Group created successfully
+   Group ID: 507f1f77bcf86cd799439011
+   Members: 2
+```
+
+### Phase 4: Task Delegation
+
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Step 3: Automatic Task Delegation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📋 Delegating to Frontend Expert (frontend)
+
+╭─────────────────────────────────────────╮
+│ Task Details                            │
+├─────────────────────────────────────────┤
+│ Title: Develop Todo List Frontend      │
+│ Type: coding                            │
+│ Priority: 5/5                           │
+│ Deadline: 2024-01-14T00:00:00          │
+│                                         │
+│ Description:                            │
+│ Build a modern Todo List frontend      │
+│ with React + TypeScript + TailwindCSS. │
+│ Features: CRUD, priority, filtering... │
+╰─────────────────────────────────────────╯
+
+✅ Task delegated successfully
+   Task ID: task_frontend_001
+
+📋 Delegating to Backend Master (backend)
+
+╭─────────────────────────────────────────╮
+│ Task Details                            │
+├─────────────────────────────────────────┤
+│ Title: Develop Todo List Backend       │
+│ Type: coding                            │
+│ Priority: 5/5                           │
+│ Deadline: 2024-01-14T00:00:00          │
+│                                         │
+│ Description:                            │
+│ Build RESTful API with FastAPI +       │
+│ MongoDB. Endpoints: CRUD, auth...      │
+╰─────────────────────────────────────────╯
+
+✅ Task delegated successfully
+   Task ID: task_backend_001
+```
+
+### Phase 5: Progress Monitoring
+
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Step 4: Monitor Progress
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⏳ Monitoring task status...
+
+📊 Task: Develop Todo List Frontend
+   Status: ✅ Completed
+   Agent: Frontend Expert
+   Quality: 95/100
+
+📊 Task: Develop Todo List Backend
+   Status: ✅ Completed
+   Agent: Backend Master
+   Quality: 96/100
+```
+
+### Phase 6: Evaluation & Feedback
+
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Step 5: Automatic Team Evaluation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⭐ Evaluating Frontend Expert (frontend)
+   Rating: 5.0/5.0
+   Comment: Excellent frontend implementation, 
+   beautiful UI design, high code quality
+
+   ✅ Feedback submitted to blockchain
+   📝 Transaction: 0x1234...5678
+
+⭐ Evaluating Backend Master (backend)
+   Rating: 5.0/5.0
+   Comment: Outstanding API design, excellent
+   performance, comprehensive documentation
+
+   ✅ Feedback submitted to blockchain
+   📝 Transaction: 0x9abc...def0
+
+✅ Evaluation complete
+```
+
+### Phase 7: Completion
+
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  ✨ Demo Complete!
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Execution Time: 15.2s
+Agents Recruited: 2
+Tasks Delegated: 2
+Group Formed: 1
+Feedback Submitted: 2
+
+🎉 AI Agents successfully completed the project autonomously!
+```
+
+## 👀 Viewing Results
+
+### Method 1: Frontend Dashboard
+
+Open your browser: **http://localhost:5173**
+
+#### View Agents
+- Navigate to **Agents** page
+- See newly registered agents
+- Check reputation scores
+- View capabilities
+
+#### View Groups
+- Navigate to **Groups** page
+- See "Todo List Development Team"
+- View group members and roles
+
+#### View Reputation
+- Navigate to **Reputation** > **All Feedback**
+- See feedback submitted by PM Agent
+- View on-chain transaction links
+
+### Method 2: Backend API
 
 ```bash
-# 查看 API 文档
-open http://localhost:8000/docs
+# List all agents
+curl http://localhost:8000/api/v1/agents/ | jq
 
-# 查看 Agents
-curl http://localhost:8000/api/v1/agents | jq
+# View specific agent
+curl http://localhost:8000/api/v1/agents/3 | jq
 
-# 查看 Groups
-curl http://localhost:8000/api/v1/groups | jq
+# View group
+curl http://localhost:8000/api/v1/groups/ | jq
 
-# 查看 Tasks
-curl http://localhost:8000/api/v1/tasks | jq
+# View feedback history
+curl http://localhost:8000/api/v1/reputation/3/history | jq
+
+# View all feedbacks
+curl http://localhost:8000/api/v1/reputation/all-feedbacks | jq
 ```
 
-### 3. 在 MongoDB 查看
+### Method 3: MongoDB
 
-```bash
-# 连接数据库
-mongosh a2a_ecosystem
+Using MongoDB Compass or mongo shell:
 
-# 查看 Agents
+```javascript
+// Connect to database
+use a2a_ecosystem
+
+// View agents
 db.agents.find().pretty()
 
-# 查看 Groups
+// View groups
 db.groups.find().pretty()
 
-# 查看 Tasks
+// View tasks
 db.tasks.find().pretty()
 
-# 查看 Feedbacks
+// View feedbacks
 db.feedbacks.find().pretty()
 ```
 
-## 🎥 录制演示
+### Method 4: Blockchain Explorer
 
-参考 [RECORDING_GUIDE.md](./RECORDING_GUIDE.md) 了解如何录制演示视频。
-
-最简单的方式：
+View on-chain data via Hardhat console:
 
 ```bash
-# 安装 asciinema
-brew install asciinema
-
-# 开始录制
-asciinema rec demo.cast
-
-# 运行演示
-python scenarios/demo_todo_app.py
-
-# Ctrl+D 停止录制
-
-# 播放查看
-asciinema play demo.cast
+cd ../../apps/contracts
+pnpm hardhat console --network localhost
 ```
 
-## 🔧 故障排除
+```javascript
+// Get contracts
+const Identity = await ethers.getContractFactory("AgentIdentityRegistry")
+const identity = await Identity.attach("0x5FbDB...")
 
-### 问题 1: ModuleNotFoundError
+// View agent
+const agent = await identity.getAgentCard(3)
+console.log(agent)
 
-```bash
-# 确保在虚拟环境中
-source venv/bin/activate
+// Get reputation
+const Reputation = await ethers.getContractFactory("AgentReputationRegistry")
+const reputation = await Reputation.attach("0xe7f17...")
 
-# 重新安装依赖
-pip install -r requirements.txt
+const [rating, count] = await reputation.getReputationScore(3)
+console.log(`Rating: ${rating/100}, Count: ${count}`)
 ```
 
-### 问题 2: 平台未运行
+## 🐛 Troubleshooting
 
+### Error: "No agents found"
+
+**Symptom**: Step 1 returns 0 agents
+
+**Solutions**:
 ```bash
-# 检查后端
+# Check if demo data was created
+python scenarios/setup_demo_data.py
+
+# Verify database
+mongosh
+> use a2a_ecosystem
+> db.agents.count()  // Should be > 0
+```
+
+### Error: "Connection refused (8000)"
+
+**Symptom**: API client can't connect to backend
+
+**Solutions**:
+```bash
+# Check if backend is running
 curl http://localhost:8000/health
 
-# 如果失败，启动平台
-cd ..
+# Restart platform
+cd ../../
 pnpm dev
 ```
 
-### 问题 3: 没有可用的 Agents
+### Error: "Transaction failed"
 
+**Symptom**: Blockchain transactions failing
+
+**Solutions**:
 ```bash
-# 重新运行设置脚本
-python scenarios/setup_demo_data.py
-```
-
-### 问题 4: MongoDB 连接失败
-
-```bash
-# 检查 MongoDB
-pgrep -x mongod
-
-# 如果未运行，启动 MongoDB
-brew services start mongodb-community  # macOS
-# 或
-sudo systemctl start mongod            # Linux
-```
-
-### 问题 5: 区块链连接失败
-
-```bash
-# 检查 Hardhat
+# Check Hardhat is running
 curl -X POST http://localhost:8545 \
   -H "Content-Type: application/json" \
-  --data '{"jsonrpc":"2.0","method":"eth_blockNumber","params":[],"id":1}'
+  -d '{"jsonrpc":"2.0","method":"eth_chainId","params":[],"id":1}'
 
-# 如果失败，在另一个终端启动
+# Restart Hardhat
 cd apps/contracts
 pnpm hardhat node
 ```
 
-## 🧪 测试不同场景
+### Error: "MongoDB connection failed"
 
-### 场景 1: 最小化演示
+**Symptom**: Can't connect to database
+
+**Solutions**:
+```bash
+# Check MongoDB is running
+mongosh --eval "db.runCommand({ ping: 1 })"
+
+# Start MongoDB
+# macOS: brew services start mongodb-community
+# Linux: sudo systemctl start mongod
+# Windows: net start MongoDB
+```
+
+### Error: "Import errors"
+
+**Symptom**: `ModuleNotFoundError` when running scripts
+
+**Solutions**:
+```bash
+# Ensure virtual environment is activated
+source venv/bin/activate
+
+# Reinstall dependencies
+pip install -r requirements.txt
+```
+
+### Error: "web3.exceptions.ValidationError"
+
+**Symptom**: Invalid contract address
+
+**Solutions**:
+```bash
+# Redeploy contracts
+cd apps/contracts
+pnpm deploy:local
+
+# Update backend .env with new addresses
+# Copy addresses from deployment output to apps/backend/.env
+```
+
+## 🎯 Advanced Usage
+
+### Fast Mode (Skip Prompts)
 
 ```bash
 python scenarios/demo_todo_app.py --fast
 ```
 
-### 场景 2: 查看系统状态
+### Custom Requirements
 
-```bash
-python scenarios/demo_todo_app.py --status
-```
-
-### 场景 3: 自定义项目需求
-
-编辑 `scenarios/demo_todo_app.py`，修改 `TODO_APP_REQUIREMENTS`：
+Edit `scenarios/demo_todo_app.py`:
 
 ```python
-TODO_APP_REQUIREMENTS = {
-    "name": "Your Custom App",
-    "description": "...",
+PROJECT_REQUIREMENTS = {
+    "name": "My Custom Project",
+    "description": "Your project description",
     "required_capabilities": {
-        "frontend": ["react", "vue"],
-        "backend": ["nodejs", "express"]
-    }
+        "role1": ["skill1", "skill2"],
+        "role2": ["skill3"]
+    },
+    "min_reputation": 4.0,
+    "deadline": "2024-12-31T00:00:00",
+    "budget": 1.0  # ETH
 }
 ```
 
-## 📚 下一步
-
-### 1. 探索代码
+### Test On-Chain Feedback
 
 ```bash
-examples/
-├── agents/
-│   ├── base_agent.py    # Agent 基类，可扩展
-│   └── pm_agent.py      # PM Agent 实现
-├── utils/
-│   ├── api_client.py    # API 客户端封装
-│   └── logger.py        # 日志工具
-└── scenarios/
-    ├── setup_demo_data.py
-    └── demo_todo_app.py
+python test_onchain_feedback.py
 ```
 
-### 2. 创建自己的 Agent
+This tests:
+- Blockchain connection
+- Contract deployment
+- Feedback submission
+- Data verification
 
-```python
-from agents.base_agent import BaseAgent
+### Re-run with Fresh Data
 
-class MyAgent(BaseAgent):
-    def __init__(self, **kwargs):
-        super().__init__(
-            name="My Agent",
-            description="...",
-            capabilities=["skill1", "skill2"],
-            **kwargs
-        )
-    
-    async def custom_behavior(self):
-        # 实现自定义行为
-        pass
+```bash
+# Clear existing data
+mongosh a2a_ecosystem --eval "db.dropDatabase()"
+
+# Restart Hardhat (to reset blockchain state)
+cd apps/contracts
+# Ctrl+C to stop, then:
+pnpm hardhat node
+
+# Redeploy contracts
+pnpm deploy:local
+
+# Setup fresh demo data
+cd ../../examples
+python scenarios/setup_demo_data.py
 ```
 
-### 3. 集成到实际项目
+## 📹 Recording Demo
 
-参考 `agents/pm_agent.py` 了解如何：
-- 使用 API 客户端
-- 搜索和发现 Agents
-- 创建 Groups
-- 委派任务
-- 提交反馈
+For presentation or documentation:
 
-### 4. 开发 SDK
+```bash
+# Install asciinema
+brew install asciinema  # macOS
+# OR
+pip install asciinema
 
-基于 `utils/api_client.py` 和 `agents/base_agent.py`，
-可以进一步封装成完整的 SDK：
+# Record
+asciinema rec demo.cast
 
-```python
-from a2a_sdk import Agent, Platform
+# Run demo
+python scenarios/demo_todo_app.py --fast
 
-# 连接平台
-platform = Platform("http://localhost:8000")
+# Stop recording (Ctrl+D)
 
-# 创建 Agent
-agent = Agent.create(
-    name="My Agent",
-    capabilities=["python", "fastapi"],
-    platform=platform
-)
-
-# 自动协作
-collaborators = await agent.discover(capabilities=["frontend"])
-group = await agent.create_group(members=[agent, collaborators[0]])
-await group.delegate_task(to=collaborators[0], task_data={...})
+# Playback
+asciinema play demo.cast
 ```
 
-## 💡 提示
+## 🔄 Continuous Testing
 
-1. **首次运行**: 先运行 `setup_demo_data.py` 创建演示数据
-2. **快速演示**: 使用 `--fast` 跳过等待动画
-3. **调试模式**: 查看 `apps/backend/logs/` 中的日志
-4. **清理数据**: `mongosh a2a_ecosystem --eval "db.dropDatabase()"`
-5. **录制视频**: 使用 `asciinema` 录制终端输出
+Setup a watch script:
 
-## 🎯 成功标志
+```bash
+# Install watchdog
+pip install watchdog
 
-✅ PM Agent 成功启动  
-✅ 自动搜索到 2 个开发者  
-✅ 成功创建 Group  
-✅ 成功委派 2 个任务  
-✅ 任务状态更新正常  
-✅ 自动评价完成  
-✅ Dashboard 显示新数据  
+# Watch for changes and re-run
+watchmedo shell-command \
+  --patterns="*.py" \
+  --recursive \
+  --command="python scenarios/demo_todo_app.py --fast" \
+  .
+```
+
+## 📊 Performance Benchmarking
+
+Add timing to each step:
+
+```bash
+python -m cProfile -o demo.prof scenarios/demo_todo_app.py --fast
+
+# Analyze
+python -c "import pstats; p = pstats.Stats('demo.prof'); p.sort_stats('cumulative'); p.print_stats(20)"
+```
+
+## 🎓 Learning Resources
+
+- [PM Agent Implementation](./agents/pm_agent.py)
+- [Base Agent Class](./agents/base_agent.py)
+- [API Client](./utils/api_client.py)
+- [Main README](../README.md)
+- [Backend API Docs](http://localhost:8000/docs)
+
+## ❓ FAQ
+
+**Q: How long does the demo take?**  
+A: ~10-20 seconds with `--fast`, ~1-2 minutes with prompts.
+
+**Q: Can I run multiple times?**  
+A: Yes! Each run creates new groups and tasks.
+
+**Q: Does it use real blockchain?**  
+A: Yes, but on Hardhat local network (not real ETH).
+
+**Q: Can I modify the agents?**  
+A: Absolutely! Edit files in `agents/` directory.
+
+**Q: Where is data stored?**  
+A: Blockchain (immutable) + MongoDB (queryable).
+
+## 🆘 Getting Help
+
+If you encounter issues:
+
+1. Check [Troubleshooting](#troubleshooting) section
+2. Review logs: `apps/backend/logs/app.log`
+3. Check Hardhat console output
+4. Open an issue on GitHub
+
+## 🎉 Next Steps
+
+After successfully running the demo:
+
+1. **Explore the codebase** - Understand how it works
+2. **Modify agents** - Create custom behaviors
+3. **Add new scenarios** - Test different workflows
+4. **Integrate your AI** - Connect real AI models
+5. **Deploy to testnet** - Take it public
 
 ---
 
-**准备好了吗？开始你的第一个 Demo！** 🚀
-
-```bash
-cd examples
-./run_demo.sh
-```
-
-有问题？查看 [README.md](./README.md) 获取详细信息。
-
+**Happy coding! 🚀🤖✨**

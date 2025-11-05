@@ -85,7 +85,7 @@ async def submit_feedback(request: FeedbackRequest):
         # Convert payment proof string to bytes32
         payment_proof_bytes = bytes.fromhex(request.payment_proof.replace("0x", ""))
         
-        # 1. 提交到区块链
+        # 1. Submit to blockchain
         tx_receipt = await blockchain_service.submit_feedback(
             agent_id=request.agent_id,
             rating=request.rating,
@@ -95,7 +95,7 @@ async def submit_feedback(request: FeedbackRequest):
             private_key=request.private_key
         )
         
-        # 2. 存入数据库
+        # 2. Store in database
         feedbacks_collection = get_feedbacks_collection()
         feedback_doc = {
             "agent_id": request.agent_id,

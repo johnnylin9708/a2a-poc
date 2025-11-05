@@ -1,406 +1,569 @@
 # @a2a/backend
 
-FastAPI backend for the A2A Agent Ecosystem
+Fast API backend for the A2A Agent Ecosystem Infrastructure
 
-## 功能特性
+## 🌟 Features
 
-- **Agent Management API** - Agent 註冊、查詢、更新
-- **A2A Protocol Handler** - Agent 間通信協議處理
-- **Blockchain Integration** - 與 ERC-8004 智能合約交互
-- **MongoDB Storage** - Off-chain 數據存儲
-- **IPFS Integration** - 去中心化文件存儲
-- **RESTful API** - 完整的 REST API 接口
+- **Agent Management API** - Register, query, and update agents
+- **A2A Protocol Handler** - Agent-to-agent communication protocol
+- **Blockchain Integration** - Interact with ERC-8004 smart contracts
+- **MongoDB Storage** - Off-chain data storage and caching
+- **IPFS Integration** - Decentralized file storage
+- **RESTful API** - Complete REST API with auto-generated docs
+- **Reputation System** - On-chain reputation with database caching
+- **Payment Integration** - x402 micro-payment verification
+- **Rate Limiting** - API throttling and abuse prevention
+- **API Key Management** - Tiered access control
+- **Analytics** - Performance metrics and ecosystem health
+- **Security** - Behavior auditing and malicious activity detection
 
-## 專案結構
+## 📁 Project Structure
 
 ```
 backend/
 ├── app/
-│   ├── main.py              # FastAPI 應用入口
-│   ├── config.py            # 配置管理
-│   ├── database.py          # MongoDB 連接
+│   ├── main.py                    # FastAPI application entry
+│   ├── config.py                  # Configuration management
+│   ├── database.py                # MongoDB connection
 │   ├── api/
-│   │   ├── v1/
-│   │   │   ├── agents.py    # Agent 相關 API
-│   │   │   ├── groups.py    # Group 管理 API
-│   │   │   ├── reputation.py # 聲譽系統 API
-│   │   │   └── validation.py # 驗證 API
+│   │   └── v1/
+│   │       ├── agents.py          # Agent APIs
+│   │       ├── groups.py          # Group management APIs
+│   │       ├── tasks.py           # Task delegation APIs
+│   │       ├── reputation.py      # Reputation system APIs
+│   │       ├── payments.py        # Payment tracking APIs
+│   │       ├── analytics.py       # Analytics APIs
+│   │       └── security.py        # Security APIs
 │   ├── services/
-│   │   ├── blockchain.py    # 區塊鏈服務
-│   │   ├── a2a_handler.py   # A2A 協議處理
-│   │   ├── ipfs_service.py  # IPFS 服務
-│   │   └── agent_manager.py # Agent 管理服務
+│   │   ├── blockchain.py          # Blockchain service (Web3.py)
+│   │   ├── ipfs.py                # IPFS service (Pinata)
+│   │   ├── security.py            # Security monitoring
+│   │   └── analytics.py           # Analytics service
+│   ├── middleware/
+│   │   ├── rate_limit.py          # Rate limiting
+│   │   ├── auth.py                # Authentication
+│   │   └── logging.py             # Request logging
 │   ├── models/
-│   │   ├── agent.py         # Agent 數據模型
-│   │   ├── group.py         # Group 數據模型
-│   │   └── task.py          # Task 數據模型
+│   │   ├── agent.py               # Agent data model
+│   │   ├── group.py               # Group data model
+│   │   ├── task.py                # Task data model
+│   │   ├── feedback.py            # Feedback data model
+│   │   └── payment.py             # Payment data model
 │   └── schemas/
-│       ├── agent.py         # Agent Pydantic schemas
-│       ├── group.py         # Group Pydantic schemas
-│       └── task.py          # Task Pydantic schemas
+│       ├── agent.py               # Agent Pydantic schemas
+│       ├── group.py               # Group Pydantic schemas
+│       ├── task.py                # Task Pydantic schemas
+│       └── reputation.py          # Reputation Pydantic schemas
 ├── tests/
 │   ├── test_agents.py
 │   ├── test_blockchain.py
-│   └── test_a2a.py
-├── venv/                    # Python 虛擬環境
-├── requirements.txt
+│   ├── test_reputation.py
+│   └── test_api.py
+├── logs/                          # Application logs
+├── venv/                          # Python virtual environment
+├── requirements.txt               # Python dependencies
+├── .env.example                   # Environment variables template
 └── README.md
 ```
 
-## 🚀 快速開始
+## 🚀 Quick Start
 
-### 方法 1：從項目根目錄啟動（推薦）
+### Prerequisites
 
-```bash
-# 確保 MongoDB 正在運行
-brew services start mongodb-community
+- Python >= 3.11
+- MongoDB (local or Atlas)
+- Hardhat node running (for blockchain)
 
-# 從根目錄啟動所有服務
-cd /Users/johnnylin/Documents/a2a-poc
-pnpm dev
-
-# 或只啟動後端
-pnpm backend:dev
-```
-
-### 方法 2：直接運行後端
+### Installation
 
 ```bash
+# Navigate to backend directory
 cd apps/backend
 
-# 激活虛擬環境
-source venv/bin/activate
+# Create virtual environment
+python -m venv venv
 
-# 運行
-python -m app.main
-```
+# Activate virtual environment
+source venv/bin/activate  # macOS/Linux
+# OR
+venv\Scripts\activate      # Windows
 
-## 📋 前置需求
-
-### 1. Python 依賴
-
-依賴已安裝在 `venv/` 虛擬環境中。如需重新安裝：
-
-```bash
-cd apps/backend
-
-# 創建虛擬環境（如果不存在）
-python3 -m venv venv
-
-# 激活虛擬環境
-source venv/bin/activate  # Mac/Linux
-# venv\Scripts\activate   # Windows
-
-# 安裝依賴
+# Install dependencies
 pip install -r requirements.txt
 ```
 
-### 2. MongoDB 設置
+### Environment Setup
 
-**選項 A: 本地 MongoDB（推薦用於開發）**
+Copy the environment template:
 
 ```bash
-# Mac
-brew tap mongodb/brew
-brew install mongodb-community
-brew services start mongodb-community
-
-# 驗證
-mongosh --eval "db.version()"
+cp .env.example .env
 ```
 
-**選項 B: Docker MongoDB**
+Edit `.env` with your configuration:
 
-```bash
-docker run -d -p 27017:27017 --name a2a-mongodb mongo
-
-# 停止
-docker stop a2a-mongodb
-
-# 啟動
-docker start a2a-mongodb
-```
-
-**選項 C: MongoDB Atlas（雲端）**
-
-1. 註冊 [MongoDB Atlas](https://www.mongodb.com/cloud/atlas)（免費）
-2. 創建集群並獲取連接字串
-3. 更新 `.env` 中的 `MONGODB_URL`
-
-### 3. 環境變量配置
-
-創建或編輯 `apps/backend/.env`：
-
-```bash
-# MongoDB 配置
+```env
+# MongoDB
 MONGODB_URL=mongodb://localhost:27017
-MONGODB_DB_NAME=a2a_agent_ecosystem
+MONGODB_DB_NAME=a2a_ecosystem
 
-# API 配置
-API_HOST=0.0.0.0
-API_PORT=8000
+# Blockchain (Hardhat Local)
+BLOCKCHAIN_RPC_URL=http://localhost:8545
+CHAIN_ID=31337
+
+# Contract Addresses (update after deployment)
+IDENTITY_REGISTRY_ADDRESS=0x5FbDB2315678afecb367f032d93F642f64180aa3
+REPUTATION_REGISTRY_ADDRESS=0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512
+VALIDATION_REGISTRY_ADDRESS=0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0
+
+# IPFS (Pinata)
+PINATA_API_KEY=your_pinata_api_key
+PINATA_SECRET_KEY=your_pinata_secret_key
+
+# Application
+ENVIRONMENT=development
 LOG_LEVEL=INFO
+API_V1_PREFIX=/api/v1
 
-# 區塊鏈配置（部署合約後填入）
-IDENTITY_REGISTRY_ADDRESS=
-REPUTATION_REGISTRY_ADDRESS=
-VALIDATION_REGISTRY_ADDRESS=
-WEB3_PROVIDER_URI=http://127.0.0.1:8545
-
-# IPFS 配置
-IPFS_HOST=127.0.0.1
-IPFS_PORT=5001
+# Security
+RATE_LIMIT_PER_MINUTE=60
+RATE_LIMIT_PER_HOUR=1000
 ```
 
-## 🧪 測試運行
+### Running the Server
 
 ```bash
-# 啟動後端
-pnpm backend:dev
+# Development mode with auto-reload
+python -m app.main
 
-# 在另一個終端測試
-curl http://localhost:8000/
-curl http://localhost:8000/health
-
-# 查看 API 文檔
-open http://localhost:8000/docs
-```
-
-## 📊 成功啟動的標誌
-
-你應該看到：
-
-```
-INFO:     Started server process [xxxxx]
-INFO:     Waiting for application startup.
-✅ Connected to MongoDB: a2a_agent_ecosystem
-✅ Database indexes created
-✅ Agent Management Service initialized
-INFO:     Application startup complete.
-INFO:     Uvicorn running on http://0.0.0.0:8000
-```
-
-## 🌐 API 文檔
-
-啟動服務後訪問：
-- **Swagger UI**: http://localhost:8000/docs
-- **ReDoc**: http://localhost:8000/redoc
-
-## 📡 API 端點
-
-### Agents
-
-- `POST /api/v1/agents/register` - 註冊新 Agent
-- `GET /api/v1/agents` - 查詢 Agents
-- `GET /api/v1/agents/{agent_id}` - 獲取 Agent 詳情
-- `PUT /api/v1/agents/{agent_id}` - 更新 Agent
-- `POST /api/v1/agents/discover` - 發現符合條件的 Agents
-
-### Groups
-
-- `POST /api/v1/groups` - 創建 Group
-- `GET /api/v1/groups/{group_id}` - 獲取 Group 詳情
-- `POST /api/v1/groups/{group_id}/add-agent` - 添加 Agent 到 Group
-- `POST /api/v1/groups/{group_id}/tasks` - 委派任務到 Group
-
-### Reputation
-
-- `GET /api/v1/reputation/{agent_id}` - 獲取 Agent 聲譽
-- `POST /api/v1/reputation/feedback` - 提交反饋
-
-### Validation
-
-- `GET /api/v1/validation/{agent_id}` - 獲取驗證記錄
-- `POST /api/v1/validation/submit` - 提交驗證結果
-
-## 🧪 測試
-
-```bash
-cd apps/backend
-
-# 運行所有測試
-pytest
-
-# 運行特定測試
-pytest tests/test_agents.py
-
-# 生成覆蓋率報告
-pytest --cov=app tests/
-
-# 生成 HTML 覆蓋率報告
-pytest --cov=app --cov-report=html tests/
-```
-
-## 🐛 常見問題排查
-
-### 1. MongoDB 連接失敗
-
-**症狀**: `RuntimeError: Database not initialized`
-
-**解決方案**:
-```bash
-# 檢查 MongoDB 是否運行
-brew services list | grep mongodb
-ps aux | grep mongod
-
-# 啟動 MongoDB
-brew services start mongodb-community
-
-# 或使用 Docker
-docker run -d -p 27017:27017 --name a2a-mongodb mongo
-```
-
-### 2. Port 8000 被占用
-
-**症狀**: `Address already in use`
-
-**解決方案**:
-```bash
-# 查找占用進程
-lsof -i :8000
-
-# 關閉進程
-kill -9 <PID>
-
-# 或修改 .env 中的 API_PORT
-echo "API_PORT=8001" >> .env
-```
-
-### 3. Python 依賴問題
-
-**症狀**: `ModuleNotFoundError`
-
-**解決方案**:
-```bash
-cd apps/backend
-
-# 確認虛擬環境
-source venv/bin/activate
-
-# 重新安裝依賴
-pip install -r requirements.txt
-
-# 驗證安裝
-pip list | grep fastapi
-```
-
-### 4. 區塊鏈連接問題
-
-**症狀**: 無法連接到區塊鏈
-
-**解決方案**:
-```bash
-# 確保 Hardhat 節點正在運行
-cd apps/contracts
-pnpm node
-
-# 檢查 .env 中的 WEB3_PROVIDER_URI
-echo $WEB3_PROVIDER_URI
-```
-
-## 🔧 開發工具
-
-### 開發模式（自動重載）
-
-```bash
-cd apps/backend
-source venv/bin/activate
+# Or with uvicorn directly
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-### 代碼格式化
+The API will be available at:
+- **API**: http://localhost:8000
+- **Interactive Docs**: http://localhost:8000/docs
+- **Alternative Docs**: http://localhost:8000/redoc
+- **Health Check**: http://localhost:8000/health
 
-```bash
-# 使用 black
-black app/
+## 📚 API Documentation
 
-# 使用 isort（排序 imports）
-isort app/
+### Auto-Generated Documentation
 
-# 使用 flake8（檢查）
-flake8 app/
+FastAPI provides automatic interactive API documentation:
+
+- **Swagger UI**: http://localhost:8000/docs
+  - Interactive API testing
+  - Request/response examples
+  - Schema definitions
+
+- **ReDoc**: http://localhost:8000/redoc
+  - Alternative documentation format
+  - Better for reading
+  - Print-friendly
+
+### API Endpoints Overview
+
+#### Agent Management
+```
+GET    /api/v1/agents/           # List all agents
+POST   /api/v1/agents/           # Register new agent
+GET    /api/v1/agents/{id}       # Get agent details
+PUT    /api/v1/agents/{id}       # Update agent
+DELETE /api/v1/agents/{id}       # Delete agent
+POST   /api/v1/agents/discover   # Discover agents by capabilities
+GET    /api/v1/agents/search     # Search agents (advanced)
 ```
 
-### 類型檢查
+#### Group Management
+```
+GET    /api/v1/groups/           # List all groups
+POST   /api/v1/groups/           # Create new group
+GET    /api/v1/groups/{id}       # Get group details
+PUT    /api/v1/groups/{id}       # Update group
+DELETE /api/v1/groups/{id}       # Delete group
+POST   /api/v1/groups/{id}/members  # Add member
+DELETE /api/v1/groups/{id}/members/{agent_id}  # Remove member
+```
+
+#### Task Management
+```
+GET    /api/v1/tasks/            # List tasks
+POST   /api/v1/tasks/delegate    # Delegate new task
+GET    /api/v1/tasks/{id}        # Get task details
+PUT    /api/v1/tasks/{id}        # Update task status
+GET    /api/v1/tasks/agent/{id}  # Get agent's tasks
+```
+
+#### Reputation System
+```
+GET    /api/v1/reputation/{agent_id}         # Get agent reputation
+POST   /api/v1/reputation/feedback           # Submit feedback
+GET    /api/v1/reputation/{agent_id}/history # Get feedback history
+GET    /api/v1/reputation/all-feedbacks      # Get all feedbacks
+GET    /api/v1/reputation/leaderboard/top    # Get leaderboard
+```
+
+#### Payment Tracking
+```
+GET    /api/v1/payments/                     # List payments
+POST   /api/v1/payments/                     # Record payment
+GET    /api/v1/payments/{id}                 # Get payment details
+GET    /api/v1/payments/agent/{agent_id}    # Get agent payments
+GET    /api/v1/payments/stats                # Payment statistics
+```
+
+#### Analytics
+```
+GET    /api/v1/analytics/dashboard           # Dashboard metrics
+GET    /api/v1/analytics/agents              # Agent statistics
+GET    /api/v1/analytics/ecosystem           # Ecosystem health
+GET    /api/v1/analytics/revenue             # Revenue analytics
+```
+
+#### Security & Admin
+```
+POST   /api/v1/security/api-keys             # Generate API key
+GET    /api/v1/security/audit-logs           # Get audit logs
+GET    /api/v1/security/rate-limits          # Check rate limits
+```
+
+### Example API Calls
+
+#### Register an Agent
 
 ```bash
-# 使用 mypy
+curl -X POST "http://localhost:8000/api/v1/agents/" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "My Agent",
+    "description": "AI assistant for data analysis",
+    "capabilities": ["python", "data-science", "ml"],
+    "endpoint": "https://myagent.example.com/api",
+    "owner_address": "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb",
+    "private_key": "0x..."
+  }'
+```
+
+#### Discover Agents
+
+```bash
+curl -X POST "http://localhost:8000/api/v1/agents/discover" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "capability": "react",
+    "min_reputation": 4.0,
+    "is_active": true,
+    "limit": 10
+  }'
+```
+
+#### Create a Group
+
+```bash
+curl -X POST "http://localhost:8000/api/v1/groups/" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Development Team",
+    "description": "Full-stack development group",
+    "admin_address": "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb",
+    "initial_agents": [1, 2, 3]
+  }'
+```
+
+#### Submit Feedback
+
+```bash
+curl -X POST "http://localhost:8000/api/v1/reputation/feedback" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "agent_id": 1,
+    "rating": 5,
+    "comment": "Excellent work!",
+    "reviewer_address": "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb",
+    "payment_proof": "0xabcd...",
+    "private_key": "0x..."
+  }'
+```
+
+## 🏗️ Architecture
+
+### Tech Stack
+
+- **FastAPI** - Modern Python web framework
+- **Pydantic** - Data validation using Python type hints
+- **Motor** - Async MongoDB driver
+- **Web3.py** - Ethereum blockchain interaction
+- **httpx** - Async HTTP client
+- **python-dotenv** - Environment variable management
+- **Rich** - Beautiful terminal formatting
+
+### Design Patterns
+
+#### Layered Architecture
+```
+API Layer (FastAPI Routes)
+    ↓
+Service Layer (Business Logic)
+    ↓
+Data Layer (MongoDB + Blockchain)
+```
+
+#### Dependency Injection
+FastAPI's dependency injection system for clean, testable code.
+
+#### Async/Await
+All I/O operations use async/await for better performance.
+
+#### Lazy Loading
+Blockchain connections initialized on-demand to avoid startup delays.
+
+## 🧪 Testing
+
+### Run All Tests
+
+```bash
+pytest
+```
+
+### Run Specific Test File
+
+```bash
+pytest tests/test_agents.py
+```
+
+### Run with Coverage
+
+```bash
+pytest --cov=app --cov-report=html
+```
+
+### Test Categories
+
+```bash
+# Unit tests
+pytest tests/unit/
+
+# Integration tests
+pytest tests/integration/
+
+# API tests
+pytest tests/api/
+```
+
+## 🔒 Security
+
+### Rate Limiting
+
+Default limits (configurable in .env):
+- 60 requests per minute
+- 1000 requests per hour
+
+Exceeding limits returns `429 Too Many Requests`.
+
+### API Key Management
+
+Generate API keys with different tiers:
+
+```bash
+curl -X POST "http://localhost:8000/api/v1/security/api-keys" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "My API Key",
+    "tier": "premium"
+  }'
+```
+
+Tiers:
+- **free**: 100 req/hour
+- **basic**: 1000 req/hour
+- **premium**: 10000 req/hour
+
+### Audit Logging
+
+All sensitive operations are logged:
+- Agent registration
+- Feedback submission
+- Payment recording
+- Group modifications
+
+View audit logs:
+```bash
+curl "http://localhost:8000/api/v1/security/audit-logs?limit=50"
+```
+
+## 📊 Monitoring
+
+### Health Check
+
+```bash
+curl http://localhost:8000/health
+```
+
+Returns:
+```json
+{
+  "status": "healthy",
+  "environment": "development",
+  "blockchain": {
+    "provider": "http://localhost:8545",
+    "chain_id": 31337
+  }
+}
+```
+
+### Application Logs
+
+Logs are stored in `logs/app.log`:
+
+```bash
+tail -f logs/app.log
+```
+
+Log levels: DEBUG, INFO, WARNING, ERROR, CRITICAL
+
+### Metrics
+
+Access metrics at:
+```bash
+curl http://localhost:8000/api/v1/analytics/dashboard
+```
+
+## 🐛 Troubleshooting
+
+### Issue: "MongoDB connection failed"
+
+**Solution**:
+```bash
+# Check MongoDB is running
+mongosh --eval "db.runCommand({ ping: 1 })"
+
+# Start MongoDB
+# macOS: brew services start mongodb-community
+# Linux: sudo systemctl start mongod  
+# Windows: net start MongoDB
+```
+
+### Issue: "Blockchain connection failed"
+
+**Solution**:
+```bash
+# Check Hardhat is running
+curl -X POST http://localhost:8545 \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","method":"eth_chainId","params":[],"id":1}'
+
+# Start Hardhat
+cd ../contracts
+pnpm hardhat node
+```
+
+### Issue: "Contract not deployed"
+
+**Solution**:
+```bash
+# Deploy contracts
+cd ../contracts
+pnpm deploy:local
+
+# Update .env with new addresses
+```
+
+### Issue: "IPFS upload failed"
+
+**Solution**:
+- Verify Pinata API keys in `.env`
+- Check Pinata dashboard: https://pinata.cloud
+- Ensure file size < 100MB
+
+## 🚀 Deployment
+
+### Production Setup
+
+1. **Use Production MongoDB**:
+```env
+MONGODB_URL=mongodb+srv://username:password@cluster.mongodb.net/
+```
+
+2. **Configure Production Blockchain**:
+```env
+BLOCKCHAIN_RPC_URL=https://mainnet.infura.io/v3/YOUR_KEY
+CHAIN_ID=1  # Ethereum Mainnet
+```
+
+3. **Set Environment**:
+```env
+ENVIRONMENT=production
+LOG_LEVEL=WARNING
+```
+
+4. **Use Production Server**:
+```bash
+gunicorn app.main:app -w 4 -k uvicorn.workers.UvicornWorker
+```
+
+### Docker Deployment
+
+```dockerfile
+FROM python:3.11-slim
+
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY ./app ./app
+
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+```
+
+```bash
+docker build -t a2a-backend .
+docker run -p 8000:8000 --env-file .env a2a-backend
+```
+
+## 📝 Development
+
+### Code Style
+
+We follow PEP 8 with:
+```bash
+# Format code
+black app/
+
+# Check linting
+flake8 app/
+
+# Type checking
 mypy app/
 ```
 
-## 🚀 部署
+### Adding New Endpoints
 
-### Docker 部署
+1. Create route in `app/api/v1/`
+2. Add business logic in `app/services/`
+3. Define Pydantic schemas in `app/schemas/`
+4. Write tests in `tests/`
 
-```bash
-# 構建鏡像
-docker build -t a2a-backend .
+Example:
+```python
+# app/api/v1/my_endpoint.py
+from fastapi import APIRouter
 
-# 運行容器
-docker run -d \
-  -p 8000:8000 \
-  --name a2a-backend \
-  -e MONGODB_URL=mongodb://host.docker.internal:27017 \
-  a2a-backend
+router = APIRouter()
+
+@router.get("/my-resource")
+async def get_resource():
+    return {"message": "Hello World"}
 ```
 
-### Production 部署
+## 🔗 Related
 
-```bash
-# 使用 Gunicorn + Uvicorn workers
-gunicorn app.main:app \
-  -w 4 \
-  -k uvicorn.workers.UvicornWorker \
-  --bind 0.0.0.0:8000 \
-  --access-logfile - \
-  --error-logfile -
-```
+- [Main README](../../README.md)
+- [Smart Contracts](../contracts/README.md)
+- [Frontend](../frontend/README.md)
+- [PoC Demo](../../examples/README.md)
 
-## 🎯 完整開發流程
+---
 
-1. **啟動 MongoDB**
-   ```bash
-   brew services start mongodb-community
-   ```
-
-2. **啟動區塊鏈節點**
-   ```bash
-   cd apps/contracts
-   pnpm dev
-   ```
-
-3. **部署智能合約**
-   ```bash
-   cd apps/contracts
-   pnpm deploy:local
-   # 記下合約地址
-   ```
-
-4. **更新後端環境變量**
-   ```bash
-   cd apps/backend
-   # 編輯 .env，填入合約地址
-   ```
-
-5. **啟動後端**
-   ```bash
-   cd apps/backend
-   pnpm dev
-   ```
-
-6. **測試 API**
-   - 訪問 http://localhost:8000/docs
-   - 註冊第一個 Agent
-   - 測試 Agent 發現功能
-
-## 🔗 相關鏈接
-
-- [FastAPI 文檔](https://fastapi.tiangolo.com/)
-- [Motor (Async MongoDB)](https://motor.readthedocs.io/)
-- [Web3.py](https://web3py.readthedocs.io/)
-- [A2A Protocol](https://github.com/a2aproject/a2a-samples)
-- [ERC-8004 Standard](https://eips.ethereum.org/EIPS/eip-8004)
-
-## 📝 License
-
-MIT
+**Built with FastAPI for high performance and developer experience** ⚡🐍

@@ -1,13 +1,13 @@
 """
-设置演示数据
-创建必要的 Agents 用于演示
+Setup Demo Data
+Create necessary Agents for demonstration
 """
 
 import asyncio
 import sys
 import os
 
-# 添加父目录到 Python 路径
+# Add parent directory to Python path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from web3 import Web3
@@ -18,7 +18,7 @@ from rich.panel import Panel
 
 console = Console()
 
-# 演示账户私钥（Hardhat 测试账户）
+# Demo account private keys (Hardhat test accounts)
 DEMO_ACCOUNTS = [
     {
         "name": "PM Agent",
@@ -48,7 +48,7 @@ BLOCKCHAIN_RPC = "http://localhost:8545"
 
 
 async def check_platform_health():
-    """检查平台是否运行"""
+    """Check if platform is running"""
     try:
         async with httpx.AsyncClient() as client:
             response = await client.get(f"{PLATFORM_URL}/health", timeout=5.0)
@@ -58,7 +58,7 @@ async def check_platform_health():
 
 
 async def upload_to_ipfs(metadata: dict) -> str:
-    """上传元数据到 IPFS（或使用 mock）"""
+    """Upload metadata to IPFS (or use mock)"""
     try:
         async with httpx.AsyncClient() as client:
             response = await client.post(
@@ -72,7 +72,7 @@ async def upload_to_ipfs(metadata: dict) -> str:
     except Exception as e:
         console.print(f"[yellow]⚠️  IPFS upload warning: {e}[/yellow]")
     
-    # Fallback: 生成 mock CID
+    # Fallback: Generate mock CID
     import hashlib
     import json
     data_str = json.dumps(metadata, sort_keys=True)
@@ -81,13 +81,13 @@ async def upload_to_ipfs(metadata: dict) -> str:
 
 
 async def register_agent_on_blockchain(agent_data: dict, w3: Web3) -> str:
-    """在区块链上注册 Agent"""
+    """Register Agent on blockchain"""
     
-    # 加载合约 ABI（简化版）
-    # 实际应该从 artifacts 加载
+    # Load contract ABI (simplified version)
+    # Should load from artifacts in production
     contract_address = w3.to_checksum_address("0x5FbDB2315678afecb367f032d93F642f64180aa3")
     
-    # 简化的 ABI - 只包含 registerAgent 函数
+    # Simplified ABI - only includes registerAgent function
     contract_abi = [
         {
             "inputs": [
@@ -107,10 +107,10 @@ async def register_agent_on_blockchain(agent_data: dict, w3: Web3) -> str:
     try:
         contract = w3.eth.contract(address=contract_address, abi=contract_abi)
         
-        # 准备账户
+        # Prepare account
         account = Account.from_key(agent_data["private_key"])
         
-        # 上传 metadata
+        # Upload metadata
         metadata = {
             "name": agent_data["name"],
             "description": agent_data["description"],
@@ -122,7 +122,7 @@ async def register_agent_on_blockchain(agent_data: dict, w3: Web3) -> str:
         ipfs_uri = await upload_to_ipfs(metadata)
         console.print(f"  📦 Metadata URI: {ipfs_uri}")
         
-        # 构建交易
+        # Build transaction
         nonce = w3.eth.get_transaction_count(account.address)
         
         txn = contract.functions.registerAgent(
@@ -134,35 +134,35 @@ async def register_agent_on_blockchain(agent_data: dict, w3: Web3) -> str:
         ).build_transaction({
             'from': account.address,
             'nonce': nonce,
-            'gas': 3000000,  # 增加 gas limit
+            'gas': 3000000,  # Increased gas limit
             'gasPrice': w3.eth.gas_price
         })
         
-        # 签名交易
+        # Sign transaction
         signed_txn = w3.eth.account.sign_transaction(txn, agent_data["private_key"])
         
-        # 发送交易
+        # Send transaction
         tx_hash = w3.eth.send_raw_transaction(signed_txn.raw_transaction)
         
-        console.print(f"  ⏳ 等待交易确认... TX: {tx_hash.hex()}")
+        console.print(f"  ⏳ Waiting for transaction confirmation... TX: {tx_hash.hex()}")
         
-        # 等待交易确认
+        # Wait for transaction confirmation
         tx_receipt = w3.eth.wait_for_transaction_receipt(tx_hash, timeout=120)
         
         if tx_receipt['status'] == 1:
-            console.print(f"  ✅ 区块链注册成功")
+            console.print(f"  ✅ Blockchain registration successful")
             return tx_hash.hex()
         else:
-            console.print(f"  ❌ 交易失败")
+            console.print(f"  ❌ Transaction failed")
             return None
             
     except Exception as e:
-        console.print(f"  ❌ 区块链注册失败: {e}")
+        console.print(f"  ❌ Blockchain registration failed: {e}")
         return None
 
 
 async def sync_to_database(tx_hash: str) -> dict:
-    """同步 Agent 到数据库"""
+    """Sync Agent to database"""
     try:
         async with httpx.AsyncClient() as client:
             response = await client.post(
@@ -173,25 +173,25 @@ async def sync_to_database(tx_hash: str) -> dict:
             
             if response.status_code == 200:
                 data = response.json()
-                console.print(f"  ✅ 数据库同步成功 (Token ID: {data.get('token_id')})")
+                console.print(f"  ✅ Database sync successful (Token ID: {data.get('token_id')})")
                 return data
             else:
-                console.print(f"  ❌ 数据库同步失败: {response.text}")
+                console.print(f"  ❌ Database sync failed: {response.text}")
                 return None
                 
     except Exception as e:
-        console.print(f"  ❌ 同步失败: {e}")
+        console.print(f"  ❌ Sync failed: {e}")
         return None
 
 
 async def manually_create_agent(agent_data: dict) -> dict:
-    """手动创建 Agent（绕过区块链，直接插入数据库）"""
+    """Manually create Agent (bypass blockchain, insert directly to database)"""
     try:
-        # 生成 mock token_id
+        # Generate mock token_id
         import random
         token_id = random.randint(1, 1000)
         
-        # 准备 Agent 数据
+        # Prepare Agent data
         from datetime import datetime, timezone
         account = Account.from_key(agent_data["private_key"])
         
@@ -217,110 +217,110 @@ async def manually_create_agent(agent_data: dict) -> dict:
             "failed_tasks": 3
         }
         
-        # 直接插入数据库
-        console.print(f"  📝 手动创建 Agent (Token ID: {token_id})")
+        # Insert directly to database
+        console.print(f"  📝 Manually creating Agent (Token ID: {token_id})")
         
         try:
-            # 通过 API 插入（模拟 sync 后的结果）
-            # 实际上我们直接操作 MongoDB 会更可靠
+            # Insert via API (simulating sync result)
+            # Actually, directly operating MongoDB would be more reliable
             from motor.motor_asyncio import AsyncIOMotorClient
             
             mongo_client = AsyncIOMotorClient("mongodb://localhost:27017")
             db = mongo_client.a2a_ecosystem
             
-            # 检查是否已存在相同 token_id
+            # Check if same token_id already exists
             existing = await db.agents.find_one({"token_id": token_id})
             if existing:
-                # 如果存在，使用不同的 token_id
+                # If exists, use different token_id
                 token_id = random.randint(1000, 9999)
                 agent_doc["token_id"] = token_id
             
-            # 插入到数据库
+            # Insert to database
             await db.agents.insert_one(agent_doc)
             
-            console.print(f"  ✅ Agent 已保存到数据库 (Token ID: {token_id})")
+            console.print(f"  ✅ Agent saved to database (Token ID: {token_id})")
             
             mongo_client.close()
             
             return agent_doc
             
         except Exception as db_error:
-            console.print(f"  ⚠️  数据库插入失败: {db_error}")
-            console.print(f"  ℹ️  Agent 数据已准备，但未保存到数据库")
+            console.print(f"  ⚠️  Database insertion failed: {db_error}")
+            console.print(f"  ℹ️  Agent data prepared but not saved to database")
             return agent_doc
             
     except Exception as e:
-        console.print(f"  ❌ 创建失败: {e}")
+        console.print(f"  ❌ Creation failed: {e}")
         return None
 
 
 async def setup_demo_agents():
-    """设置演示 Agents"""
+    """Setup demo Agents"""
     
     console.print(Panel.fit(
         "[bold cyan]A2A Demo Data Setup[/bold cyan]\n\n"
-        "准备创建演示 Agents...",
+        "Preparing to create demo Agents...",
         border_style="cyan"
     ))
     
-    # 1. 检查平台健康
-    console.print("\n[bold]1. 检查平台状态[/bold]")
+    # 1. Check platform health
+    console.print("\n[bold]1. Check Platform Status[/bold]")
     if not await check_platform_health():
-        console.print("[bold red]❌ 平台未运行！[/bold red]")
-        console.print("\n请先启动平台:")
+        console.print("[bold red]❌ Platform not running![/bold red]")
+        console.print("\nPlease start the platform first:")
         console.print("  [dim]cd /Users/johnnylin/Documents/a2a-poc[/dim]")
         console.print("  [dim]pnpm dev[/dim]")
         return
     
-    console.print("✅ 平台运行正常\n")
+    console.print("✅ Platform running normally\n")
     
-    # 2. 初始化 Web3
-    console.print("[bold]2. 连接区块链[/bold]")
+    # 2. Initialize Web3
+    console.print("[bold]2. Connect to Blockchain[/bold]")
     w3 = Web3(Web3.HTTPProvider(BLOCKCHAIN_RPC))
     
     if not w3.is_connected():
-        console.print("[bold red]❌ 区块链未连接！[/bold red]")
-        console.print("\n请确保 Hardhat 节点正在运行")
+        console.print("[bold red]❌ Blockchain not connected![/bold red]")
+        console.print("\nPlease ensure Hardhat node is running")
         return
     
-    console.print(f"✅ 已连接到区块链 (Chain ID: {w3.eth.chain_id})\n")
+    console.print(f"✅ Connected to blockchain (Chain ID: {w3.eth.chain_id})\n")
     
-    # 3. 注册 Agents
-    console.print("[bold]3. 注册演示 Agents[/bold]\n")
+    # 3. Register Agents
+    console.print("[bold]3. Register Demo Agents[/bold]\n")
     
     registered_agents = []
     
     for idx, agent_data in enumerate(DEMO_ACCOUNTS, 1):
         console.print(f"[bold cyan]Agent {idx}/{len(DEMO_ACCOUNTS)}: {agent_data['name']}[/bold cyan]")
         
-        # 方法 1: 尝试在区块链上注册
+        # Method 1: Try registering on blockchain
         tx_hash = await register_agent_on_blockchain(agent_data, w3)
         
         if tx_hash:
-            # 同步到数据库
+            # Sync to database
             agent = await sync_to_database(tx_hash)
             if agent:
-                # 添加 name 字段（从原始数据）
+                # Add name field (from original data)
                 agent['name'] = agent_data['name']
                 registered_agents.append(agent)
         else:
-            # 方法 2: 手动创建（用于演示）
-            console.print("  ⚠️  区块链注册失败，使用手动创建模式")
+            # Method 2: Manual creation (for demo)
+            console.print("  ⚠️  Blockchain registration failed, using manual creation mode")
             agent = await manually_create_agent(agent_data)
             if agent:
                 registered_agents.append(agent)
         
         console.print()
     
-    # 4. 总结
+    # 4. Summary
     console.print(Panel.fit(
-        f"[bold green]✨ 设置完成！[/bold green]\n\n"
-        f"已创建 {len(registered_agents)} 个演示 Agents:\n"
+        f"[bold green]✨ Setup Complete![/bold green]\n\n"
+        f"Created {len(registered_agents)} demo Agents:\n"
         + "\n".join([
             f"  • {a['name']} (Token ID: {a['token_id']})"
             for a in registered_agents
         ]) +
-        f"\n\n[dim]现在可以运行演示:[/dim]\n"
+        f"\n\n[dim]Now you can run the demo:[/dim]\n"
         f"[cyan]python scenarios/demo_todo_app.py[/cyan]",
         border_style="green"
     ))
@@ -330,9 +330,8 @@ if __name__ == "__main__":
     try:
         asyncio.run(setup_demo_agents())
     except KeyboardInterrupt:
-        console.print("\n[yellow]⚠️  设置已取消[/yellow]")
+        console.print("\n[yellow]⚠️  Setup cancelled[/yellow]")
     except Exception as e:
-        console.print(f"\n[bold red]❌ 设置失败: {e}[/bold red]")
+        console.print(f"\n[bold red]❌ Setup failed: {e}[/bold red]")
         import traceback
         traceback.print_exc()
-

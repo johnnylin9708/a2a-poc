@@ -1,371 +1,466 @@
 # A2A Agent Examples - PoC Demo
 
-> 展示 AI Agent 如何使用 A2A 平台自动协作完成任务
+> Demonstrating how AI Agents use the A2A platform to automatically collaborate and complete tasks
 
-## 🎯 Demo 场景
+## 🎯 Demo Scenario
 
-**目标**：PM Agent 自动组建团队开发 Todo List App
+**Goal**: PM Agent automatically assembles a team to develop a Todo List App
 
-### 工作流程
+### Workflow
 
 ```
-PM Agent (自动运行)
+PM Agent (Fully Automated)
     ↓
-1. 接收用户需求："开发一个 Todo List App"
+1. Receive user requirement: "Develop a Todo List App"
     ↓
-2. 自动搜索 Frontend Agent (React 技能)
+2. Automatically search for Frontend Agent (React skills)
     ↓
-3. 自动搜索 Backend Agent (FastAPI 技能)
+3. Automatically search for Backend Agent (FastAPI skills)
     ↓
-4. 自动创建 Group: "Todo List Team"
+4. Automatically create Group: "Todo List Team"
     ↓
-5. 自动委派任务给 Frontend Agent
+5. Automatically delegate tasks to Frontend Agent
     ↓
-6. 自动委派任务给 Backend Agent
+6. Automatically delegate tasks to Backend Agent
     ↓
-7. 监控任务进度
+7. Monitor task progress
     ↓
-8. 任务完成后自动评价和支付
+8. Automatically evaluate and process payment upon completion
 ```
 
-## 📁 文件结构
+## 📁 File Structure
 
 ```
 examples/
-├── README.md                  # 本文件
+├── README.md                  # This file
 ├── agents/
-│   ├── pm_agent.py           # PM Agent (自动运行)
-│   ├── frontend_agent.py     # Frontend Agent (模拟)
-│   ├── backend_agent.py      # Backend Agent (模拟)
-│   └── base_agent.py         # Agent 基类
+│   ├── pm_agent.py           # PM Agent (automated)
+│   ├── base_agent.py         # Agent base class
 ├── scenarios/
-│   ├── demo_todo_app.py      # 完整演示场景
-│   └── setup_demo_data.py    # 设置演示数据
+│   ├── demo_todo_app.py      # Complete demo scenario
+│   └── setup_demo_data.py    # Setup demo data
 ├── utils/
-│   ├── api_client.py         # API 客户端封装
-│   └── logger.py             # 日志工具
-└── requirements.txt          # Python 依赖
+│   ├── api_client.py         # API client wrapper
+│   └── logger.py             # Logging utilities
+└── requirements.txt          # Python dependencies
 ```
 
-## 🚀 快速开始
+## 🚀 Quick Start
 
-### 1. 安装依赖
+### 1. Install Dependencies
 
 ```bash
 cd examples
+python -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-### 2. 确保平台运行
+### 2. Ensure Platform is Running
 
 ```bash
-# 在项目根目录
+# In project root
 pnpm dev
 ```
 
-确保以下服务正在运行：
+Ensure the following services are running:
 - ✅ Backend API: http://localhost:8000
 - ✅ Frontend: http://localhost:5173
 - ✅ MongoDB: localhost:27017
 - ✅ Hardhat: localhost:8545
 
-### 3. 设置演示数据
+### 3. Setup Demo Data
 
 ```bash
 cd examples
 python scenarios/setup_demo_data.py
 ```
 
-这将创建：
-- 3 个 Agent (PM, Frontend Dev, Backend Dev)
-- 注册到区块链
-- 同步到数据库
+This will create:
+- 3 Agents (PM, Frontend Dev, Backend Dev)
+- Register them on blockchain
+- Sync to database
 
-### 4. 运行 PM Agent 演示
+### 4. Run PM Agent Demo
 
 ```bash
 python scenarios/demo_todo_app.py
 ```
 
-### 5. 观察自动化过程
-
-PM Agent 将自动：
-- 🔍 搜索合适的协作者
-- 👥 创建 Group
-- 📋 委派任务
-- ⏳ 监控进度
-- ⭐ 评价和支付
-
-## 📊 预期输出
-
-```
-🚀 PM Agent 启动中...
-✅ PM Agent 已注册 (Token ID: 1)
-
-📋 收到新需求: 开发 Todo List App
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-🔍 [自动搜索] 寻找 Frontend Developer...
-   过滤条件:
-   - 能力: react, typescript, ui-design
-   - 最低声誉: 4.0
-   - 排序: 声誉降序
-
-   找到 2 个候选者:
-   1. Frontend Expert (Token ID: 2)
-      声誉: 4.5 ⭐ | 完成任务: 50 | 成功率: 95%
-   2. UI Specialist (Token ID: 3)
-      声誉: 4.2 ⭐ | 完成任务: 30 | 成功率: 90%
-
-   ✅ 选择: Frontend Expert (最高声誉)
-
-🔍 [自动搜索] 寻找 Backend Developer...
-   过滤条件:
-   - 能力: python, fastapi, database
-   - 最低声誉: 4.0
-
-   找到 1 个候选者:
-   1. Backend Master (Token ID: 4)
-      声誉: 4.8 ⭐ | 完成任务: 80 | 成功率: 98%
-
-   ✅ 选择: Backend Master
-
-👥 [自动组建] 创建 Group: "Todo List Development Team"
-   成员:
-   - PM Agent (Leader)
-   - Frontend Expert (Developer)
-   - Backend Master (Developer)
-
-   ✅ Group ID: grp_abc123
-
-📋 [自动委派] 任务 1/2: Frontend Development
-   分配给: Frontend Expert
-   要求:
-   - 使用 React + TypeScript
-   - 实现 CRUD 操作
-   - 响应式设计
-   - 截止时间: 3 天后
-
-   ✅ Task ID: task_001
-
-📋 [自动委派] 任务 2/2: Backend API Development  
-   分配给: Backend Master
-   要求:
-   - FastAPI + MongoDB
-   - RESTful API
-   - 用户认证
-   - 截止时间: 3 天后
-
-   ✅ Task ID: task_002
-
-⏳ [监控] 等待任务完成...
-   Frontend: ████████░░ 80% (进行中)
-   Backend:  ██████████ 100% (已完成)
-
-✅ [完成] 所有任务已完成！
-
-⭐ [自动评价] Frontend Expert
-   评分: 5.0 ⭐
-   评语: 优秀的前端实现，代码质量高
-
-⭐ [自动评价] Backend Master
-   评分: 5.0 ⭐
-   评语: API 性能出色，文档完善
-
-💰 [自动支付] 
-   Frontend Expert: 0.05 ETH
-   Backend Master: 0.08 ETH
-   总计: 0.13 ETH
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-✨ Demo 完成！Todo List App 开发成功！
-```
-
-## 🎥 录制 Demo 视频
-
-### 方案 1: 终端录制
-
-```bash
-# 使用 asciinema
-asciinema rec demo.cast
-python scenarios/demo_todo_app.py
-# Ctrl+D 停止录制
-
-# 播放
-asciinema play demo.cast
-```
-
-### 方案 2: 屏幕录制
-
-1. 打开终端，调整字体大小
-2. 启动 `python scenarios/demo_todo_app.py`
-3. 使用 QuickTime / OBS 录制屏幕
-4. 同时展示 Dashboard (http://localhost:5173/analytics)
-
-### 方案 3: 组合展示
-
-```bash
-# Terminal 1: 运行 PM Agent
-python scenarios/demo_todo_app.py
-
-# Terminal 2: 实时监控 API 日志
-cd apps/backend
-tail -f logs/app.log
-
-# Browser: 打开 Analytics Dashboard
-open http://localhost:5173/analytics
-```
-
-## 🔧 配置选项
-
-### 环境变量
-
-创建 `.env` 文件：
-
-```bash
-# Platform Configuration
-PLATFORM_URL=http://localhost:8000
-BLOCKCHAIN_RPC=http://localhost:8545
-FRONTEND_URL=http://localhost:5173
-
-# Agent Configuration
-PM_AGENT_NAME="PM Agent"
-PM_AGENT_PRIVATE_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
-
-# Demo Settings
-DEMO_SPEED=normal  # fast, normal, slow
-ENABLE_COLORS=true
-VERBOSE=true
-```
-
-### 自定义场景
-
-修改 `scenarios/demo_todo_app.py`：
-
-```python
-# 自定义项目需求
-PROJECT_REQUIREMENTS = {
-    "name": "Todo List App",
-    "features": [
-        "用户认证",
-        "任务 CRUD",
-        "标签分类",
-        "截止日期提醒"
-    ],
-    "tech_stack": {
-        "frontend": "React + TypeScript",
-        "backend": "FastAPI + MongoDB"
-    }
-}
-
-# 自定义搜索条件
-SEARCH_CRITERIA = {
-    "frontend": {
-        "capabilities": ["react", "typescript"],
-        "min_reputation": 4.0,
-        "max_price": 0.1
-    },
-    "backend": {
-        "capabilities": ["python", "fastapi"],
-        "min_reputation": 4.0,
-        "max_price": 0.1
-    }
-}
-```
-
-## 🧪 测试不同场景
-
-### 场景 1: 最小可行产品 (MVP)
-
-```bash
-python scenarios/demo_todo_app.py --mode=mvp
-```
-
-### 场景 2: 完整功能
-
-```bash
-python scenarios/demo_todo_app.py --mode=full
-```
-
-### 场景 3: 快速演示（跳过等待）
-
+Or for fast mode (skip prompts):
 ```bash
 python scenarios/demo_todo_app.py --fast
 ```
 
-## 📊 验证功能
+### 5. Observe Automation
 
-演示完成后，验证以下功能：
+PM Agent will automatically:
+- 🔍 Search for suitable collaborators
+- 👥 Create a Group
+- 📋 Delegate tasks
+- ⏳ Monitor progress
+- ⭐ Evaluate and process payment
 
-### 1. Agent 注册 ✅
-```bash
-curl http://localhost:8000/api/v1/agents | jq
+## 📊 Expected Output
+
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  🚀 Demo Start
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Scenario: PM Agent auto-assembles team to develop Todo List App
+
+This demo will show how AI Agents autonomously collaborate
+
+Press Enter to continue...
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Step 1: Automatic Agent Search
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔍 Searching for Frontend experts...
+✅ Found 1 qualified Agent
+
+┏━━━━━━┳━━━━━━━━━━━━━━━━┳━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━┳━━━━━━━━━━━━┓
+┃ Rank ┃ Name           ┃ ID     ┃ Reputation┃ Tasks ┃ Success    ┃
+┡━━━━━━╇━━━━━━━━━━━━━━━━╇━━━━━━━━╇━━━━━━━━━━━╇━━━━━━━╇━━━━━━━━━━━━┩
+│ #1   │ Frontend Expert│ 3      │ 4.5 ⭐    │ 50    │ 94%        │
+└──────┴────────────────┴────────┴───────────┴───────┴────────────┘
+
+🔍 Searching for Backend experts...
+✅ Found 1 qualified Agent
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Step 2: Automatic Group Formation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+👥 Creating group: Todo List Team
+✅ Group created successfully
+   Group ID: 507f1f77bcf86cd799439011
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Step 3: Automatic Task Delegation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📋 Delegating task to Frontend Expert (frontend)
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ Task Details                    ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+Title: Develop Todo List Frontend
+Type: coding
+Priority: 5/5
+Deadline: 2024-01-14T00:00:00
+
+Description:
+Build a modern Todo List frontend...
+
+✅ Task delegated successfully
+   Task ID: task_abc123
+
+...
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Demo Complete! ✨
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Total Time: 12.5s
+Agents Recruited: 2
+Tasks Delegated: 2
+Group Formed: 1
 ```
 
-### 2. Group 创建 ✅
-```bash
-curl http://localhost:8000/api/v1/groups | jq
+## 🎬 Key Features Demonstrated
+
+### 1. Autonomous Agent Discovery
+- PM Agent searches based on capabilities
+- Filters by reputation score
+- Considers task success rate
+
+### 2. Automatic Group Formation
+- Creates collaboration group
+- Assigns roles to members
+- Manages group lifecycle
+
+### 3. Task Delegation
+- Breaks down complex project into tasks
+- Assigns based on agent capabilities
+- Sets priorities and deadlines
+
+### 4. Progress Monitoring
+- Tracks task status
+- Monitors agent performance
+- Handles failures gracefully
+
+### 5. Evaluation & Payment
+- Evaluates work quality
+- Submits on-chain feedback
+- Processes payments (x402)
+
+## 🛠️ Architecture
+
+### PM Agent (Orchestrator)
+
+```python
+class PMAgent(BaseAgent):
+    async def run_project(self, requirements):
+        # 1. Parse requirements
+        required_roles = self._analyze_requirements(requirements)
+        
+        # 2. Search for agents
+        agents = await self._search_agents(required_roles)
+        
+        # 3. Form group
+        group = await self._create_group(agents)
+        
+        # 4. Delegate tasks
+        tasks = await self._delegate_tasks(group, requirements)
+        
+        # 5. Monitor & evaluate
+        await self._monitor_and_evaluate(tasks)
 ```
 
-### 3. Task 委派 ✅
-```bash
-curl http://localhost:8000/api/v1/tasks | jq
+### Base Agent (Common Functionality)
+
+```python
+class BaseAgent:
+    - Authentication (address, private key)
+    - API client for platform interaction
+    - Task management
+    - Feedback submission
+    - Payment handling
 ```
 
-### 4. Analytics 更新 ✅
-打开 http://localhost:5173/analytics
-查看：
-- Total Agents 增加
-- Tasks 统计更新
-- Trending Agents 出现新 Agent
+## 📈 Performance Metrics
 
-## 🐛 故障排除
+The demo tracks:
+- **Discovery Time**: How fast agents are found
+- **Group Formation Time**: Time to assemble team
+- **Task Delegation Time**: Time to distribute work
+- **Total Execution Time**: End-to-end automation
 
-### 问题 1: Agent 注册失败
+## 🔍 How It Works
 
-```bash
-# 检查区块链是否运行
-curl http://localhost:8545 -X POST -H "Content-Type: application/json" \
-  --data '{"jsonrpc":"2.0","method":"eth_blockNumber","params":[],"id":1}'
+### Step 1: Agent Discovery
+
+```python
+# PM Agent searches for frontend developers
+agents = await self.client.list_agents(
+    capability="react",
+    min_reputation=4.0,
+    is_active=True
+)
 ```
 
-### 问题 2: MongoDB 连接失败
+### Step 2: Group Formation
 
-```bash
-# 检查 MongoDB
-mongosh --eval "db.adminCommand('ping')"
+```python
+# Create collaboration group
+group = await self.client.create_group(
+    name="Todo List Team",
+    description="Team to develop Todo List App",
+    admin_address=self.address,
+    initial_agents=[frontend_id, backend_id]
+)
 ```
 
-### 问题 3: API 超时
+### Step 3: Task Delegation
 
-```bash
-# 检查后端日志
-cd apps/backend
-tail -f logs/app.log
+```python
+# Delegate task to agent
+task = await self.client.delegate_task(
+    agent_id=frontend_id,
+    task_data={
+        "title": "Develop Todo List Frontend",
+        "description": "Build modern UI with React...",
+        "task_type": "coding",
+        "priority": 5,
+        "deadline": "2024-01-14"
+    },
+    group_id=group["group_id"]
+)
 ```
 
-## 📚 扩展阅读
+### Step 4: Feedback Submission
 
-- [A2A Protocol Specification](https://github.com/a2aproject/a2a-samples)
-- [ERC-8004 Standard](https://eips.ethereum.org/EIPS/eip-8004)
-- [Platform API Documentation](http://localhost:8000/docs)
+```python
+# Submit on-chain feedback
+await self.client.submit_feedback(
+    agent_id=agent_id,
+    rating=5,  # 1-5 stars
+    comment="Excellent work!",
+    reviewer_address=self.address,
+    payment_proof="0x...",  # Payment transaction hash
+    private_key=self.private_key
+)
+```
 
-## 🤝 贡献
+## 🧪 Testing
 
-想要添加更多示例 Agent？
+### Environment Check
 
-1. 继承 `base_agent.py`
-2. 实现核心方法
-3. 添加到 `scenarios/` 目录
-4. 提交 PR
+```bash
+python check_env.py
+```
 
-## 📝 License
+This validates:
+- ✅ Backend API connectivity
+- ✅ Blockchain node availability
+- ✅ MongoDB connection
+- ✅ Required Python packages
 
-MIT
+### Manual Testing
+
+```bash
+# Test individual components
+python -c "from utils.api_client import PlatformClient; import asyncio; asyncio.run(PlatformClient().health_check())"
+```
+
+## 📝 Customization
+
+### Create Your Own Agent
+
+```python
+from agents.base_agent import BaseAgent
+
+class MyCustomAgent(BaseAgent):
+    def __init__(self, name: str, address: str, private_key: str):
+        super().__init__(name, address, private_key, base_url="http://localhost:8000")
+    
+    async def perform_task(self, task_data):
+        # Your custom logic here
+        pass
+```
+
+### Create Custom Scenario
+
+```python
+from agents.pm_agent import PMAgent
+
+async def my_scenario():
+    pm = PMAgent(
+        name="My PM",
+        address="0x...",
+        private_key="0x..."
+    )
+    
+    requirements = {
+        "name": "My Project",
+        "description": "Project description",
+        "required_capabilities": {
+            "role1": ["skill1", "skill2"],
+            "role2": ["skill3"]
+        }
+    }
+    
+    await pm.run_project(requirements)
+```
+
+## 🎯 Best Practices
+
+### 1. Error Handling
+- All API calls include retry logic
+- Graceful degradation on failures
+- Comprehensive error logging
+
+### 2. Performance
+- Async/await for concurrent operations
+- Connection pooling
+- Rate limiting awareness
+
+### 3. Security
+- Private keys never logged
+- Secure key storage (env vars)
+- Input validation
+
+## 🐛 Troubleshooting
+
+### Issue: "No agents found"
+
+**Cause**: Database empty or search criteria too strict
+
+**Solution**:
+```bash
+# Re-run setup
+python scenarios/setup_demo_data.py
+```
+
+### Issue: "Connection refused"
+
+**Cause**: Backend not running
+
+**Solution**:
+```bash
+# Start platform
+cd ../../
+pnpm dev
+```
+
+### Issue: "Transaction failed"
+
+**Cause**: Insufficient gas or wrong network
+
+**Solution**:
+- Check Hardhat is running
+- Verify contract addresses in `.env`
+- Ensure account has ETH
+
+### Issue: "Import errors"
+
+**Cause**: Missing dependencies
+
+**Solution**:
+```bash
+pip install -r requirements.txt
+```
+
+## 📚 API Reference
+
+See [API Client Documentation](./utils/api_client.py) for full API reference.
+
+### Key Endpoints Used
+
+- `GET /api/v1/agents/` - List agents
+- `POST /api/v1/groups/` - Create group
+- `POST /api/v1/tasks/delegate` - Delegate task
+- `POST /api/v1/reputation/feedback` - Submit feedback
+
+## 🎥 Recording Demo
+
+See [Recording Guide](./RECORDING_GUIDE.md) for video demo instructions.
+
+## 🔗 Related Resources
+
+- [Main README](../README.md)
+- [Backend API Docs](../apps/backend/README.md)
+- [Smart Contracts](../apps/contracts/README.md)
+- [Frontend](../apps/frontend/README.md)
+
+## 💡 What's Next?
+
+After running the demo, you can:
+
+1. **Explore the Frontend**: http://localhost:5173
+   - View registered agents
+   - See group formations
+   - Check reputation scores
+
+2. **Check the Blockchain**: http://localhost:8545
+   - View on-chain transactions
+   - Inspect smart contract state
+   - Verify feedback records
+
+3. **Examine the Database**: MongoDB Compass
+   - See off-chain cached data
+   - Query agent/group/task collections
+   - Analyze feedback history
+
+4. **Build Your Own**: Create custom agents and scenarios
+
+## 📞 Support
+
+Issues? Questions? See the main [README](../README.md) for support channels.
 
 ---
 
-**准备好展示真正的 Agent 自主协作了吗？** 🚀
-
-运行 `python scenarios/demo_todo_app.py` 开始！
-
+**Built to demonstrate the power of autonomous AI agent collaboration** 🤖✨

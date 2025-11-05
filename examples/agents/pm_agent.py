@@ -1,6 +1,6 @@
 """
 PM Agent - Project Manager Agent
-自动搜索、组建团队、委派任务
+Automatically searches, forms teams, and delegates tasks
 """
 
 from typing import Dict, List, Optional
@@ -14,7 +14,7 @@ from utils.logger import (
 
 
 class PMAgent(BaseAgent):
-    """PM Agent - 负责项目管理和团队协调"""
+    """PM Agent - Responsible for project management and team coordination"""
     
     def __init__(
         self,
@@ -36,10 +36,10 @@ class PMAgent(BaseAgent):
     
     async def start_project(self, project_requirements: Dict) -> Dict:
         """
-        启动项目
+        Start project
         
         Args:
-            project_requirements: 项目需求
+            project_requirements: Project requirements
                 {
                     "name": "Todo List App",
                     "description": "...",
@@ -52,30 +52,30 @@ class PMAgent(BaseAgent):
                 }
         
         Returns:
-            项目执行结果
+            Project execution results
         """
         project_name = project_requirements.get("name", "Unnamed Project")
         
-        log_section(f"启动项目: {project_name}")
+        log_section(f"Starting Project: {project_name}")
         log_info(project_requirements.get("description", ""))
         
         try:
-            # Step 1: 自动搜索团队成员
+            # Step 1: Automatically search for team members
             await self._recruit_team(project_requirements)
             
-            # Step 2: 创建 Group
+            # Step 2: Create Group
             await self._create_team_group(project_name, project_requirements)
             
-            # Step 3: 分配任务
+            # Step 3: Delegate tasks
             tasks = await self._delegate_tasks(project_requirements)
             
-            # Step 4: 监控任务进度
+            # Step 4: Monitor task progress
             results = await self._monitor_tasks(tasks)
             
-            # Step 5: 评价团队成员
+            # Step 5: Evaluate team members
             await self._evaluate_team(results)
             
-            log_success("🎉 项目完成！")
+            log_success("🎉 Project Completed!")
             
             return {
                 "project_name": project_name,
@@ -85,23 +85,23 @@ class PMAgent(BaseAgent):
             }
             
         except Exception as e:
-            log_error(f"项目执行失败: {project_name}", e)
+            log_error(f"Project execution failed: {project_name}", e)
             raise
     
     async def _recruit_team(self, requirements: Dict):
-        """Step 1: 自动搜索并招募团队成员"""
-        log_section("Step 1: 自动搜索团队成员")
+        """Step 1: Automatically search and recruit team members"""
+        log_section("Step 1: Automatically Search for Team Members")
         
         required_caps = requirements.get("required_capabilities", {})
         min_reputation = requirements.get("min_reputation", 4.0)
         
         for role, capabilities in required_caps.items():
-            log_info(f"🔍 搜索 {role.upper()} 开发者...")
-            log_info(f"   能力要求: {', '.join(capabilities)}")
-            log_info(f"   最低声誉: {min_reputation} ⭐")
+            log_info(f"🔍 Searching for {role.upper()} Developer...")
+            log_info(f"   Required Capabilities: {', '.join(capabilities)}")
+            log_info(f"   Minimum Reputation: {min_reputation} ⭐")
             print()
             
-            # 搜索 Agents
+            # Search for Agents
             agents = await self.discover_agents(
                 capabilities=capabilities,
                 min_reputation=min_reputation,
@@ -110,13 +110,13 @@ class PMAgent(BaseAgent):
             )
             
             if not agents:
-                log_error(f"未找到符合条件的 {role} 开发者")
+                log_error(f"No qualified {role} developers found")
                 continue
             
-            # 显示搜索结果
+            # Display search results
             log_agent_search_results(agents)
             
-            # 选择最佳候选者（声誉最高）
+            # Select best candidate (highest reputation)
             best_agent = agents[0]
             self.team_members.append({
                 "role": role,
@@ -124,19 +124,19 @@ class PMAgent(BaseAgent):
             })
             
             log_success(
-                f"已选择: {best_agent['name']}",
-                f"Token ID: {best_agent['token_id']} | 声誉: {best_agent['reputation_score'] / 100:.1f}⭐"
+                f"Selected: {best_agent['name']}",
+                f"Token ID: {best_agent['token_id']} | Reputation: {best_agent['reputation_score'] / 100:.1f}⭐"
             )
             print()
     
     async def _create_team_group(self, project_name: str, requirements: Dict):
-        """Step 2: 创建 Group"""
-        log_section("Step 2: 创建协作 Group")
+        """Step 2: Create Group"""
+        log_section("Step 2: Create Collaboration Group")
         
         member_ids = [member["agent"]["token_id"] for member in self.team_members]
         
-        log_info(f"👥 Group 名称: {project_name} Team")
-        log_info(f"   成员数量: {len(member_ids)}")
+        log_info(f"👥 Group Name: {project_name} Team")
+        log_info(f"   Team Size: {len(member_ids)}")
         
         for member in self.team_members:
             log_info(f"   - {member['role']}: {member['agent']['name']}")
@@ -150,12 +150,12 @@ class PMAgent(BaseAgent):
         )
         
         if self.group_id:
-            log_success(f"Group 创建成功", f"Group ID: {self.group_id}")
+            log_success(f"Group created successfully", f"Group ID: {self.group_id}")
         print()
     
     async def _delegate_tasks(self, requirements: Dict) -> List[Dict]:
-        """Step 3: 委派任务"""
-        log_section("Step 3: 委派任务给团队成员")
+        """Step 3: Delegate tasks"""
+        log_section("Step 3: Delegate Tasks to Team Members")
         
         tasks = []
         project_name = requirements.get("name", "Project")
@@ -165,18 +165,18 @@ class PMAgent(BaseAgent):
             role = member["role"]
             agent = member["agent"]
             
-            log_info(f"📋 任务 {idx}/{len(self.team_members)}: {role.upper()} 开发")
-            log_info(f"   分配给: {agent['name']} (Token ID: {agent['token_id']})")
+            log_info(f"📋 Task {idx}/{len(self.team_members)}: {role.upper()} Development")
+            log_info(f"   Assigned to: {agent['name']} (Token ID: {agent['token_id']})")
             print()
             
-            # 根据角色创建任务
+            # Create task based on role
             task_data = self._create_task_data(role, project_name, deadline)
             
-            # 显示任务详情
+            # Display task details
             log_task_delegation(task_data)
             print()
             
-            # 委派任务
+            # Delegate task
             task_id = await self.delegate_task(
                 agent_id=agent["token_id"],
                 task_data=task_data,
@@ -192,31 +192,31 @@ class PMAgent(BaseAgent):
                     "task_data": task_data
                 })
                 self.active_tasks.append(task_id)
-                log_success(f"任务委派成功", f"Task ID: {task_id}")
+                log_success(f"Task delegated successfully", f"Task ID: {task_id}")
             
             print()
         
         return tasks
     
     def _create_task_data(self, role: str, project_name: str, deadline: Optional[str]) -> Dict:
-        """根据角色创建任务数据"""
+        """Create task data based on role"""
         
         if role == "frontend":
             return {
                 "title": f"{project_name} - Frontend Development",
                 "description": f"""
-开发 {project_name} 的前端界面
+Develop the frontend interface for {project_name}
 
-要求:
-- 使用 React + TypeScript
-- 实现完整的 CRUD 操作
-- 响应式设计，支持移动端
-- 良好的用户体验
+Requirements:
+- Use React + TypeScript
+- Implement full CRUD operations
+- Responsive design with mobile support
+- Excellent user experience
 
-交付物:
-- 完整的前端代码
-- 组件文档
-- 部署说明
+Deliverables:
+- Complete frontend code
+- Component documentation
+- Deployment guide
 """,
                 "task_type": "frontend_development",
                 "priority": 5,
@@ -231,19 +231,19 @@ class PMAgent(BaseAgent):
             return {
                 "title": f"{project_name} - Backend API Development",
                 "description": f"""
-开发 {project_name} 的后端 API
+Develop the backend API for {project_name}
 
-要求:
-- 使用 FastAPI + MongoDB
-- RESTful API 设计
-- 用户认证和授权
-- API 文档 (OpenAPI)
+Requirements:
+- Use FastAPI + MongoDB
+- RESTful API design
+- User authentication and authorization
+- API documentation (OpenAPI)
 
-交付物:
-- 完整的后端代码
-- API 文档
-- 数据库设计
-- 部署脚本
+Deliverables:
+- Complete backend code
+- API documentation
+- Database design
+- Deployment scripts
 """,
                 "task_type": "backend_development",
                 "priority": 5,
@@ -264,22 +264,22 @@ class PMAgent(BaseAgent):
             }
     
     async def _monitor_tasks(self, tasks: List[Dict]) -> List[Dict]:
-        """Step 4: 监控任务进度 (模拟)"""
-        log_section("Step 4: 监控任务进度")
+        """Step 4: Monitor task progress (simulated)"""
+        log_section("Step 4: Monitor Task Progress")
         
-        log_info("⏳ 等待团队完成任务...")
-        log_info("   (Demo 中模拟任务自动完成)")
+        log_info("⏳ Waiting for team to complete tasks...")
+        log_info("   (Tasks automatically complete in demo mode)")
         print()
         
-        # 模拟任务进度
+        # Simulate task progress
         results = []
         for task in tasks:
-            # 在实际场景中，这里会轮询任务状态
-            # 现在我们模拟任务完成
+            # In production, this would poll task status
+            # Now we simulate task completion
             
-            await asyncio.sleep(1)  # 模拟耗时
+            await asyncio.sleep(1)  # Simulate work time
             
-            # 模拟任务完成
+            # Simulate task completion
             task_result = {
                 "task_id": task["task_id"],
                 "agent_id": task["agent_id"],
@@ -298,19 +298,19 @@ class PMAgent(BaseAgent):
             results.append(task_result)
             
             log_success(
-                f"{task['agent_name']} 完成任务",
-                f"角色: {task['role']} | 质量: 95/100"
+                f"{task['agent_name']} completed task",
+                f"Role: {task['role']} | Quality: 95/100"
             )
         
         print()
-        log_success("✅ 所有任务已完成！")
+        log_success("✅ All tasks completed!")
         print()
         
         return results
     
     async def _evaluate_team(self, results: List[Dict]):
-        """Step 5: 评价团队成员"""
-        log_section("Step 5: 自动评价团队成员")
+        """Step 5: Evaluate team members"""
+        log_section("Step 5: Automatically Evaluate Team Members")
         
         for result in results:
             agent_id = result["agent_id"]
@@ -318,17 +318,17 @@ class PMAgent(BaseAgent):
             role = result["role"]
             quality_score = result["result"]["quality_score"]
             
-            # 根据质量分数计算评分
-            rating = min(5.0, quality_score / 20)  # 100分制转5星
+            # Calculate rating based on quality score
+            rating = min(5.0, quality_score / 20)  # Convert 100-point to 5-star
             
             comment = self._generate_feedback_comment(role, quality_score)
             
-            log_info(f"⭐ 评价 {agent_name} ({role})")
-            log_info(f"   评分: {rating:.1f}/5.0")
-            log_info(f"   评语: {comment}")
+            log_info(f"⭐ Evaluating {agent_name} ({role})")
+            log_info(f"   Rating: {rating:.1f}/5.0")
+            log_info(f"   Comment: {comment}")
             print()
             
-            # 提交反馈到区块链
+            # Submit feedback to blockchain
             try:
                 success = await self.submit_feedback(
                     agent_id=agent_id,
@@ -336,40 +336,40 @@ class PMAgent(BaseAgent):
                     comment=comment
                 )
                 if success:
-                    log_success("   ✅ 反馈已提交到区块链")
+                    log_success("   ✅ Feedback submitted to blockchain")
                 else:
-                    log_warning("   ⚠️  反馈提交失败，但继续执行")
+                    log_warning("   ⚠️  Feedback submission failed, but continuing demo")
             except Exception as e:
-                # 在演示中，如果链上提交失败，不中断整个流程
-                log_warning(f"   ⚠️  链上提交失败: {str(e)[:80]}")
-                log_info("   ℹ️  继续执行后续步骤...")
+                # In demo mode, on-chain submission failure doesn't stop the flow
+                log_warning(f"   ⚠️  On-chain submission failed: {str(e)[:80]}")
+                log_info("   ℹ️  Continuing with next steps...")
             
             await asyncio.sleep(0.5)
         
-        log_success("✅ 评价完成")
+        log_success("✅ Evaluation complete")
     
     def _generate_feedback_comment(self, role: str, quality_score: int) -> str:
-        """生成反馈评语"""
+        """Generate feedback comment"""
         if quality_score >= 90:
             comments = {
-                "frontend": "出色的前端实现，UI 设计精美，代码质量高",
-                "backend": "优秀的 API 设计，性能出色，文档完善"
+                "frontend": "Excellent frontend implementation, beautiful UI design, high code quality",
+                "backend": "Outstanding API design, excellent performance, comprehensive documentation"
             }
         elif quality_score >= 80:
             comments = {
-                "frontend": "良好的前端实现，符合要求",
-                "backend": "可靠的 API 实现，功能完整"
+                "frontend": "Good frontend implementation, meets requirements",
+                "backend": "Reliable API implementation, complete functionality"
             }
         else:
             comments = {
-                "frontend": "基本符合要求，有改进空间",
-                "backend": "功能实现正确，建议优化性能"
+                "frontend": "Basically meets requirements, room for improvement",
+                "backend": "Functionality implemented correctly, suggest performance optimization"
             }
         
-        return comments.get(role, "任务完成良好")
+        return comments.get(role, "Task completed well")
     
     async def get_project_summary(self) -> Dict:
-        """获取项目摘要"""
+        """Get project summary"""
         return {
             "team_size": len(self.team_members),
             "active_tasks": len(self.active_tasks),
@@ -383,4 +383,3 @@ class PMAgent(BaseAgent):
                 for m in self.team_members
             ]
         }
-

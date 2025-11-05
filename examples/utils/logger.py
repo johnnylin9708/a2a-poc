@@ -14,7 +14,7 @@ console = Console()
 
 
 def setup_logger(name: str = "a2a_agent", level: str = "INFO") -> logging.Logger:
-    """设置日志"""
+    """Setup logger with specified name and level"""
     logger = logging.getLogger(name)
     logger.setLevel(getattr(logging, level))
     
@@ -29,42 +29,42 @@ def setup_logger(name: str = "a2a_agent", level: str = "INFO") -> logging.Logger
 
 
 def log_success(message: str, details: str = ""):
-    """成功日志"""
+    """Log success message"""
     console.print(f"✅ {message}", style="bold green")
     if details:
         console.print(f"   {details}", style="dim")
 
 
 def log_error(message: str, error: Exception = None):
-    """错误日志"""
+    """Log error message"""
     console.print(f"❌ {message}", style="bold red")
     if error:
         console.print(f"   Error: {str(error)}", style="dim red")
 
 
 def log_info(message: str, details: str = ""):
-    """信息日志"""
+    """Log info message"""
     console.print(f"ℹ️  {message}", style="bold blue")
     if details:
         console.print(f"   {details}", style="dim")
 
 
 def log_warning(message: str):
-    """警告日志"""
+    """Log warning message"""
     console.print(f"⚠️  {message}", style="bold yellow")
 
 
 def log_section(title: str):
-    """节标题"""
+    """Log section title"""
     console.print()
     console.rule(f"[bold cyan]{title}[/bold cyan]")
     console.print()
 
 
 def log_agent_search_results(agents: List[Dict]):
-    """显示 Agent 搜索结果"""
+    """Display agent search results"""
     if not agents:
-        console.print("   [dim]未找到符合条件的 Agent[/dim]")
+        console.print("   [dim]No agents found matching criteria[/dim]")
         return
     
     table = Table(show_header=True, header_style="bold magenta", box=box.ROUNDED)
@@ -94,7 +94,7 @@ def log_agent_search_results(agents: List[Dict]):
 
 
 def log_task_delegation(task_data: Dict):
-    """显示任务委派详情"""
+    """Display task delegation details"""
     console.print(Panel.fit(
         f"""[bold]Task Details[/bold]
 
@@ -111,12 +111,12 @@ Deadline: {task_data.get('deadline', 'Not set')}
 
 
 def log_progress(message: str):
-    """显示进度"""
+    """Display progress message"""
     console.print(f"⏳ {message}", style="bold yellow")
 
 
 def log_completion(message: str, stats: Dict = None):
-    """显示完成信息"""
+    """Display completion message with optional stats"""
     console.print()
     console.print(Panel.fit(
         f"""[bold green]✨ {message}[/bold green]
@@ -129,7 +129,7 @@ def log_completion(message: str, stats: Dict = None):
 
 
 def _format_stats(stats: Dict) -> str:
-    """格式化统计信息"""
+    """Format statistics for display"""
     lines = []
     for key, value in stats.items():
         lines.append(f"{key}: {value}")
@@ -137,7 +137,7 @@ def _format_stats(stats: Dict) -> str:
 
 
 def log_agent_card(agent: Dict):
-    """显示 Agent 卡片"""
+    """Display agent card with details"""
     capabilities = ", ".join(agent.get("capabilities", []))
     reputation = agent.get("reputation_score", 0) / 100
     
@@ -157,7 +157,7 @@ def log_agent_card(agent: Dict):
 
 
 def create_progress_bar(description: str = "Processing..."):
-    """创建进度条"""
+    """Create a progress bar with spinner"""
     return Progress(
         SpinnerColumn(),
         TextColumn("[progress.description]{task.description}"),
