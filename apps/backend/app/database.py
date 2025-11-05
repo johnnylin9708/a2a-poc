@@ -69,6 +69,17 @@ async def create_indexes() -> None:
         await mongo_db.tasks.create_index("status")
         await mongo_db.tasks.create_index("created_at")
         
+        # Feedbacks collection indexes
+        await mongo_db.feedbacks.create_index("agent_id")
+        await mongo_db.feedbacks.create_index("reviewer_address")
+        await mongo_db.feedbacks.create_index("created_at")
+        await mongo_db.feedbacks.create_index([("agent_id", 1), ("created_at", -1)])
+        
+        # Validations collection indexes
+        await mongo_db.validations.create_index("agent_id")
+        await mongo_db.validations.create_index("validation_type")
+        await mongo_db.validations.create_index("created_at")
+        
         logger.info("✅ Database indexes created")
         
     except Exception as e:

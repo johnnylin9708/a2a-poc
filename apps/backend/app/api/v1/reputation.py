@@ -86,6 +86,100 @@ async def submit_feedback(request: FeedbackRequest):
         )
 
 
+@router.get("/{agent_id}/history")
+async def get_feedback_history(agent_id: int, limit: int = 20, offset: int = 0):
+    """
+    Get feedback history for an agent
+    """
+    try:
+        from app.database import get_feedbacks_collection
+        feedbacks_collection = get_feedbacks_collection()
+        
+        # Get total count
+        total = await feedbacks_collection.count_documents({"agent_id": agent_id})
+        
+        # Get feedbacks with pagination
+        cursor = feedbacks_collection.find(
+            {"agent_id": agent_id}
+        ).sort("created_at", -1).skip(offset).limit(limit)
+        
+        feedbacks = await cursor.to_list(length=limit)
+        
+        # Remove MongoDB _id and format
+        feedback_list = []
+        for feedback in feedbacks:
+            feedback_list.append({
+                "agent_id": feedback["agent_id"],
+                "rating": feedback["rating"],
+                "comment": feedback.get("comment", ""),
+                "reviewer_address": feedback["reviewer_address"],
+                "tx_hash": feedback.get("tx_hash", ""),
+                "created_at": feedback["created_at"]
+            })
+        
+        return {
+            "feedbacks": feedback_list,
+            "total": total,
+            "limit": limit,
+            "offset": offset
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to get feedback history: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to get feedback history: {str(e)}"
+        )
+
+
+@router.get("/leaderboard/top")
+async def get_reputation_leaderboard(limit: int = 50, min_feedback_count: int = 5):
+    """
+    Get reputation leaderboard
+    
+    Shows top rated agents with minimum feedback threshold
+    """
+    try:
+        from app.database import get_agents_collection
+        agents_collection = get_agents_collection()
+        
+        # Find agents with minimum feedback and sort by reputation
+        cursor = agents_collection.find({
+            "feedback_count": {"$gte": min_feedback_count},
+            "is_active": True
+        }).sort("reputation_score", -1).limit(limit)
+        
+        agents = await cursor.to_list(length=limit)
+        
+        leaderboard = []
+        for rank, agent in enumerate(agents, 1):
+            leaderboard.append({
+                "rank": rank,
+                "token_id": agent["token_id"],
+                "name": agent["name"],
+                "reputation_score": agent["reputation_score"],
+                "feedback_count": agent["feedback_count"],
+                "capabilities": agent["capabilities"][:3],  # Top 3 capabilities
+                "reputation_tier": _get_reputation_tier(
+                    agent["reputation_score"],
+                    agent["feedback_count"]
+                )
+            })
+        
+        return {
+            "leaderboard": leaderboard,
+            "total": len(leaderboard),
+            "min_feedback_count": min_feedback_count
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to get leaderboard: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to get leaderboard: {str(e)}"
+        )
+
+
 def _get_reputation_tier(avg_rating: float, feedback_count: int) -> str:
     """Calculate reputation tier"""
     if feedback_count == 0:

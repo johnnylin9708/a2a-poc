@@ -16,10 +16,10 @@ function App() {
         <Layout>
           <Routes>
             <Route path="/" element={<Dashboard />} />
-            <Route path="/agents/:tokenId" element={<AgentDetails />} />
+            <Route path="/agents/:id" element={<AgentDetails />} />
             <Route path="/register" element={<RegisterAgent />} />
             <Route path="/groups" element={<GroupManagement />} />
-            <Route path="/reputation/:agentId" element={<Reputation />} />
+            <Route path="/reputation" element={<Reputation />} />
           </Routes>
         </Layout>
       </Router>

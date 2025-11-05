@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { Bot, Users, Award, Menu } from 'lucide-react'
+import { ConnectButton } from '@rainbow-me/rainbowkit'
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
@@ -21,9 +22,14 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 <Users className="w-4 h-4" />
                 Groups
               </Link>
+              <Link to="/reputation" className="flex items-center gap-2 hover:text-primary">
+                <Award className="w-4 h-4" />
+                Reputation
+              </Link>
               <Link to="/register" className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90">
                 Register Agent
               </Link>
+              <ConnectButton />
             </div>
             
             <button className="md:hidden">

@@ -11,7 +11,7 @@ from contextlib import asynccontextmanager
 
 from app.config import settings
 from app.database import connect_to_mongo, close_mongo_connection
-from app.api.v1 import agents, groups, reputation, validation
+from app.api.v1 import agents, groups, reputation, validation, ipfs
 
 # Configure logging
 logging.basicConfig(
@@ -86,6 +86,7 @@ app.include_router(agents.router, prefix="/api/v1/agents", tags=["Agents"])
 app.include_router(groups.router, prefix="/api/v1/groups", tags=["Groups"])
 app.include_router(reputation.router, prefix="/api/v1/reputation", tags=["Reputation"])
 app.include_router(validation.router, prefix="/api/v1/validation", tags=["Validation"])
+app.include_router(ipfs.router, prefix="/api/v1/ipfs", tags=["IPFS"])
 
 
 @app.exception_handler(Exception)
