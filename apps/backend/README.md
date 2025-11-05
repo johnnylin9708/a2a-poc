@@ -42,63 +42,151 @@ backend/
 │   ├── test_agents.py
 │   ├── test_blockchain.py
 │   └── test_a2a.py
+├── venv/                    # Python 虛擬環境
 ├── requirements.txt
 └── README.md
 ```
 
-## 開發
+## 🚀 快速開始
 
-### 安裝依賴
+### 方法 1：從項目根目錄啟動（推薦）
 
 ```bash
-# 創建虛擬環境
-python -m venv venv
+# 確保 MongoDB 正在運行
+brew services start mongodb-community
+
+# 從根目錄啟動所有服務
+cd /Users/johnnylin/Documents/a2a-poc
+pnpm dev
+
+# 或只啟動後端
+pnpm backend:dev
+```
+
+### 方法 2：直接運行後端
+
+```bash
+cd apps/backend
 
 # 激活虛擬環境
-source venv/bin/activate  # Linux/Mac
+source venv/bin/activate
+
+# 運行
+python -m app.main
+```
+
+## 📋 前置需求
+
+### 1. Python 依賴
+
+依賴已安裝在 `venv/` 虛擬環境中。如需重新安裝：
+
+```bash
+cd apps/backend
+
+# 創建虛擬環境（如果不存在）
+python3 -m venv venv
+
+# 激活虛擬環境
+source venv/bin/activate  # Mac/Linux
 # venv\Scripts\activate   # Windows
 
 # 安裝依賴
 pip install -r requirements.txt
 ```
 
-### 配置環境變量
+### 2. MongoDB 設置
+
+**選項 A: 本地 MongoDB（推薦用於開發）**
 
 ```bash
-cp .env.example .env
-# 編輯 .env 文件
+# Mac
+brew tap mongodb/brew
+brew install mongodb-community
+brew services start mongodb-community
+
+# 驗證
+mongosh --eval "db.version()"
 ```
 
-### 運行服務
+**選項 B: Docker MongoDB**
 
 ```bash
-# 開發模式（自動重載）
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+docker run -d -p 27017:27017 --name a2a-mongodb mongo
 
-# 或使用 Python 直接運行
-python -m app.main
+# 停止
+docker stop a2a-mongodb
+
+# 啟動
+docker start a2a-mongodb
 ```
 
-### API 文檔
+**選項 C: MongoDB Atlas（雲端）**
+
+1. 註冊 [MongoDB Atlas](https://www.mongodb.com/cloud/atlas)（免費）
+2. 創建集群並獲取連接字串
+3. 更新 `.env` 中的 `MONGODB_URL`
+
+### 3. 環境變量配置
+
+創建或編輯 `apps/backend/.env`：
+
+```bash
+# MongoDB 配置
+MONGODB_URL=mongodb://localhost:27017
+MONGODB_DB_NAME=a2a_agent_ecosystem
+
+# API 配置
+API_HOST=0.0.0.0
+API_PORT=8000
+LOG_LEVEL=INFO
+
+# 區塊鏈配置（部署合約後填入）
+IDENTITY_REGISTRY_ADDRESS=
+REPUTATION_REGISTRY_ADDRESS=
+VALIDATION_REGISTRY_ADDRESS=
+WEB3_PROVIDER_URI=http://127.0.0.1:8545
+
+# IPFS 配置
+IPFS_HOST=127.0.0.1
+IPFS_PORT=5001
+```
+
+## 🧪 測試運行
+
+```bash
+# 啟動後端
+pnpm backend:dev
+
+# 在另一個終端測試
+curl http://localhost:8000/
+curl http://localhost:8000/health
+
+# 查看 API 文檔
+open http://localhost:8000/docs
+```
+
+## 📊 成功啟動的標誌
+
+你應該看到：
+
+```
+INFO:     Started server process [xxxxx]
+INFO:     Waiting for application startup.
+✅ Connected to MongoDB: a2a_agent_ecosystem
+✅ Database indexes created
+✅ Agent Management Service initialized
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8000
+```
+
+## 🌐 API 文檔
 
 啟動服務後訪問：
-- Swagger UI: http://localhost:8000/docs
-- ReDoc: http://localhost:8000/redoc
+- **Swagger UI**: http://localhost:8000/docs
+- **ReDoc**: http://localhost:8000/redoc
 
-## 測試
-
-```bash
-# 運行所有測試
-pytest
-
-# 運行特定測試
-pytest tests/test_agents.py
-
-# 生成覆蓋率報告
-pytest --cov=app tests/
-```
-
-## API 端點
+## 📡 API 端點
 
 ### Agents
 
@@ -125,18 +213,194 @@ pytest --cov=app tests/
 - `GET /api/v1/validation/{agent_id}` - 獲取驗證記錄
 - `POST /api/v1/validation/submit` - 提交驗證結果
 
-## 部署
-
-### Docker
+## 🧪 測試
 
 ```bash
+cd apps/backend
+
+# 運行所有測試
+pytest
+
+# 運行特定測試
+pytest tests/test_agents.py
+
+# 生成覆蓋率報告
+pytest --cov=app tests/
+
+# 生成 HTML 覆蓋率報告
+pytest --cov=app --cov-report=html tests/
+```
+
+## 🐛 常見問題排查
+
+### 1. MongoDB 連接失敗
+
+**症狀**: `RuntimeError: Database not initialized`
+
+**解決方案**:
+```bash
+# 檢查 MongoDB 是否運行
+brew services list | grep mongodb
+ps aux | grep mongod
+
+# 啟動 MongoDB
+brew services start mongodb-community
+
+# 或使用 Docker
+docker run -d -p 27017:27017 --name a2a-mongodb mongo
+```
+
+### 2. Port 8000 被占用
+
+**症狀**: `Address already in use`
+
+**解決方案**:
+```bash
+# 查找占用進程
+lsof -i :8000
+
+# 關閉進程
+kill -9 <PID>
+
+# 或修改 .env 中的 API_PORT
+echo "API_PORT=8001" >> .env
+```
+
+### 3. Python 依賴問題
+
+**症狀**: `ModuleNotFoundError`
+
+**解決方案**:
+```bash
+cd apps/backend
+
+# 確認虛擬環境
+source venv/bin/activate
+
+# 重新安裝依賴
+pip install -r requirements.txt
+
+# 驗證安裝
+pip list | grep fastapi
+```
+
+### 4. 區塊鏈連接問題
+
+**症狀**: 無法連接到區塊鏈
+
+**解決方案**:
+```bash
+# 確保 Hardhat 節點正在運行
+cd apps/contracts
+pnpm node
+
+# 檢查 .env 中的 WEB3_PROVIDER_URI
+echo $WEB3_PROVIDER_URI
+```
+
+## 🔧 開發工具
+
+### 開發模式（自動重載）
+
+```bash
+cd apps/backend
+source venv/bin/activate
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+```
+
+### 代碼格式化
+
+```bash
+# 使用 black
+black app/
+
+# 使用 isort（排序 imports）
+isort app/
+
+# 使用 flake8（檢查）
+flake8 app/
+```
+
+### 類型檢查
+
+```bash
+# 使用 mypy
+mypy app/
+```
+
+## 🚀 部署
+
+### Docker 部署
+
+```bash
+# 構建鏡像
 docker build -t a2a-backend .
-docker run -p 8000:8000 a2a-backend
+
+# 運行容器
+docker run -d \
+  -p 8000:8000 \
+  --name a2a-backend \
+  -e MONGODB_URL=mongodb://host.docker.internal:27017 \
+  a2a-backend
 ```
 
-### Production
+### Production 部署
 
 ```bash
-# 使用 Gunicorn
-gunicorn app.main:app -w 4 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000
+# 使用 Gunicorn + Uvicorn workers
+gunicorn app.main:app \
+  -w 4 \
+  -k uvicorn.workers.UvicornWorker \
+  --bind 0.0.0.0:8000 \
+  --access-logfile - \
+  --error-logfile -
 ```
+
+## 🎯 完整開發流程
+
+1. **啟動 MongoDB**
+   ```bash
+   brew services start mongodb-community
+   ```
+
+2. **啟動區塊鏈節點**
+   ```bash
+   cd apps/contracts
+   pnpm dev
+   ```
+
+3. **部署智能合約**
+   ```bash
+   cd apps/contracts
+   pnpm deploy:local
+   # 記下合約地址
+   ```
+
+4. **更新後端環境變量**
+   ```bash
+   cd apps/backend
+   # 編輯 .env，填入合約地址
+   ```
+
+5. **啟動後端**
+   ```bash
+   cd apps/backend
+   pnpm dev
+   ```
+
+6. **測試 API**
+   - 訪問 http://localhost:8000/docs
+   - 註冊第一個 Agent
+   - 測試 Agent 發現功能
+
+## 🔗 相關鏈接
+
+- [FastAPI 文檔](https://fastapi.tiangolo.com/)
+- [Motor (Async MongoDB)](https://motor.readthedocs.io/)
+- [Web3.py](https://web3py.readthedocs.io/)
+- [A2A Protocol](https://github.com/a2aproject/a2a-samples)
+- [ERC-8004 Standard](https://eips.ethereum.org/EIPS/eip-8004)
+
+## 📝 License
+
+MIT
