@@ -11,7 +11,8 @@ from contextlib import asynccontextmanager
 
 from app.config import settings
 from app.database import connect_to_mongo, close_mongo_connection
-from app.api.v1 import agents, groups, reputation, validation, ipfs, tasks, prompts, payments
+from app.api.v1 import agents, groups, reputation, validation, ipfs, tasks, prompts, payments, analytics, api_keys, monitoring
+from app.middleware.rate_limit import RateLimitMiddleware
 
 # Configure logging
 logging.basicConfig(
@@ -56,6 +57,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Rate Limiting Middleware (Phase 3)
+app.add_middleware(
+    RateLimitMiddleware,
+    requests_per_minute=60,
+    requests_per_hour=1000
+)
+
 
 @app.get("/")
 async def root():
@@ -90,6 +98,9 @@ app.include_router(payments.router, prefix="/api/v1/payments", tags=["Payments"]
 app.include_router(reputation.router, prefix="/api/v1/reputation", tags=["Reputation"])
 app.include_router(validation.router, prefix="/api/v1/validation", tags=["Validation"])
 app.include_router(ipfs.router, prefix="/api/v1/ipfs", tags=["IPFS"])
+app.include_router(analytics.router, prefix="/api/v1/analytics", tags=["Analytics"])
+app.include_router(api_keys.router, prefix="/api/v1/api-keys", tags=["API Keys"])
+app.include_router(monitoring.router, prefix="/api/v1/monitoring", tags=["Monitoring"])
 
 
 @app.exception_handler(Exception)

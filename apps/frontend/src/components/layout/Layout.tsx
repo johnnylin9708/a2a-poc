@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { Bot, Users, Award, Menu } from 'lucide-react'
+import { Bot, Users, Award, Menu, BarChart3 } from 'lucide-react'
 import { ConnectButton } from '@rainbow-me/rainbowkit'
 
 export default function Layout({ children }: { children: React.ReactNode }) {
@@ -21,6 +21,10 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               <Link to="/groups" className="flex items-center gap-2 hover:text-primary">
                 <Users className="w-4 h-4" />
                 Groups
+              </Link>
+              <Link to="/analytics" className="flex items-center gap-2 hover:text-primary">
+                <BarChart3 className="w-4 h-4" />
+                Analytics
               </Link>
               <Link to="/reputation" className="flex items-center gap-2 hover:text-primary">
                 <Award className="w-4 h-4" />

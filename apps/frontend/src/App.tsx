@@ -6,6 +6,7 @@ import AgentDetails from './pages/AgentDetails'
 import RegisterAgent from './pages/RegisterAgent'
 import GroupManagement from './pages/GroupManagement'
 import Reputation from './pages/Reputation'
+import Analytics from './pages/Analytics'
 
 const queryClient = new QueryClient()
 
@@ -20,6 +21,7 @@ function App() {
             <Route path="/register" element={<RegisterAgent />} />
             <Route path="/groups" element={<GroupManagement />} />
             <Route path="/reputation" element={<Reputation />} />
+            <Route path="/analytics" element={<Analytics />} />
           </Routes>
         </Layout>
       </Router>

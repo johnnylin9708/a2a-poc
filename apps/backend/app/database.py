@@ -96,6 +96,26 @@ async def create_indexes() -> None:
         await mongo_db.payments.create_index("is_verified")
         await mongo_db.payments.create_index("created_at")
         
+        # API Keys collection indexes (Phase 3)
+        await mongo_db.api_keys.create_index("key_hash", unique=True)
+        await mongo_db.api_keys.create_index("owner_address")
+        await mongo_db.api_keys.create_index("tier")
+        await mongo_db.api_keys.create_index("is_active")
+        await mongo_db.api_keys.create_index("created_at")
+        
+        # Errors collection indexes (Phase 3)
+        await mongo_db.errors.create_index("error_type")
+        await mongo_db.errors.create_index("severity")
+        await mongo_db.errors.create_index("timestamp")
+        await mongo_db.errors.create_index([("error_type", 1), ("timestamp", -1)])
+        await mongo_db.errors.create_index("resolved")
+        
+        # API Requests collection indexes (Phase 3)
+        await mongo_db.api_requests.create_index("timestamp")
+        await mongo_db.api_requests.create_index("path")
+        await mongo_db.api_requests.create_index("status_code")
+        await mongo_db.api_requests.create_index([("timestamp", -1), ("path", 1)])
+        
         logger.info("✅ Database indexes created")
         
     except Exception as e:
@@ -134,3 +154,27 @@ def get_validations_collection():
     """Get validations collection"""
     return get_database().validations
 
+
+def get_prompt_templates_collection():
+    """Get prompt templates collection"""
+    return get_database().prompt_templates
+
+
+def get_payments_collection():
+    """Get payments collection"""
+    return get_database().payments
+
+
+def get_api_keys_collection():
+    """Get API keys collection"""
+    return get_database().api_keys
+
+
+def get_errors_collection():
+    """Get errors collection"""
+    return get_database().errors
+
+
+def get_api_requests_collection():
+    """Get API requests collection"""
+    return get_database().api_requests

@@ -189,6 +189,289 @@ async def list_agents(
         )
 
 
+@router.get("/search/advanced", response_model=dict)
+async def advanced_search_agents(
+    query: Optional[str] = None,
+    capabilities: Optional[str] = None,  # comma-separated
+    tags: Optional[str] = None,  # comma-separated
+    min_reputation: float = 0.0,
+    max_reputation: float = 5.0,
+    min_tasks: int = 0,
+    is_active: bool = True,
+    sort_by: str = "reputation",  # reputation, tasks, recent
+    limit: int = 20,
+    offset: int = 0
+):
+    """
+    Advanced agent search with multiple filters (Phase 3)
+    
+    - Full-text search on name and description
+    - Multiple capabilities filtering
+    - Tags filtering
+    - Reputation range
+    - Task count filtering
+    - Multiple sort options
+    """
+    try:
+        from app.database import get_agents_collection
+        
+        agents_collection = get_agents_collection()
+        
+        # Build MongoDB query
+        mongo_query = {"is_active": is_active}
+        
+        # Full-text search
+        if query:
+            mongo_query["$or"] = [
+                {"name": {"$regex": query, "$options": "i"}},
+                {"description": {"$regex": query, "$options": "i"}}
+            ]
+        
+        # Capabilities filter
+        if capabilities:
+            caps_list = [c.strip() for c in capabilities.split(",")]
+            mongo_query["capabilities"] = {"$in": caps_list}
+        
+        # Tags filter
+        if tags:
+            tags_list = [t.strip() for t in tags.split(",")]
+            mongo_query["tags"] = {"$in": tags_list}
+        
+        # Reputation range
+        mongo_query["reputation_score"] = {
+            "$gte": min_reputation * 100,  # Scaled by 100
+            "$lte": max_reputation * 100
+        }
+        
+        # Task count filter
+        if min_tasks > 0:
+            mongo_query["total_tasks"] = {"$gte": min_tasks}
+        
+        # Sort options
+        sort_field = {
+            "reputation": ("reputation_score", -1),
+            "tasks": ("total_tasks", -1),
+            "recent": ("created_at", -1)
+        }.get(sort_by, ("reputation_score", -1))
+        
+        # Execute query
+        total = await agents_collection.count_documents(mongo_query)
+        cursor = agents_collection.find(mongo_query).sort(*sort_field).skip(offset).limit(limit)
+        agents = await cursor.to_list(length=limit)
+        
+        # Remove MongoDB _id
+        for agent in agents:
+            agent.pop("_id", None)
+        
+        return {
+            "agents": agents,
+            "total": total,
+            "limit": limit,
+            "offset": offset,
+            "query": query,
+            "filters": {
+                "capabilities": capabilities,
+                "tags": tags,
+                "reputation_range": [min_reputation, max_reputation],
+                "min_tasks": min_tasks
+            }
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed advanced search: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed advanced search: {str(e)}"
+        )
+
+
+@router.get("/recommendations/{agent_id}", response_model=dict)
+async def get_agent_recommendations(
+    agent_id: int,
+    limit: int = 10
+):
+    """
+    Get recommended agents based on similarity (Phase 3)
+    
+    Uses collaborative filtering based on:
+    - Similar capabilities
+    - Similar reputation tier
+    - Task completion patterns
+    """
+    try:
+        from app.database import get_agents_collection
+        
+        agents_collection = get_agents_collection()
+        
+        # Get source agent
+        source_agent = await agents_collection.find_one({"token_id": agent_id})
+        if not source_agent:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Agent {agent_id} not found"
+            )
+        
+        # Find similar agents
+        similar_query = {
+            "token_id": {"$ne": agent_id},
+            "is_active": True,
+            "capabilities": {"$in": source_agent["capabilities"]}
+        }
+        
+        # Get agents with similar reputation tier
+        rep_score = source_agent.get("reputation_score", 0)
+        rep_range = 50  # ±0.5 stars
+        similar_query["reputation_score"] = {
+            "$gte": max(0, rep_score - rep_range),
+            "$lte": min(500, rep_score + rep_range)
+        }
+        
+        cursor = agents_collection.find(similar_query).sort("reputation_score", -1).limit(limit)
+        recommendations = await cursor.to_list(length=limit)
+        
+        # Remove MongoDB _id
+        for agent in recommendations:
+            agent.pop("_id", None)
+        
+        return {
+            "source_agent_id": agent_id,
+            "recommendations": recommendations,
+            "total": len(recommendations),
+            "based_on": {
+                "capabilities": source_agent["capabilities"],
+                "reputation_tier": rep_score / 100
+            }
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to get recommendations: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to get recommendations: {str(e)}"
+        )
+
+
+@router.get("/leaderboard/top", response_model=dict)
+async def get_top_agents(
+    category: Optional[str] = None,
+    min_feedback: int = 5,
+    limit: int = 20
+):
+    """
+    Get top-rated agents leaderboard (Phase 3)
+    
+    - Overall top agents or by category
+    - Minimum feedback threshold for credibility
+    """
+    try:
+        from app.database import get_agents_collection
+        
+        agents_collection = get_agents_collection()
+        
+        query = {
+            "is_active": True,
+            "feedback_count": {"$gte": min_feedback}
+        }
+        
+        if category:
+            query["capabilities"] = category
+        
+        cursor = agents_collection.find(query).sort([
+            ("reputation_score", -1),
+            ("feedback_count", -1)
+        ]).limit(limit)
+        
+        top_agents = await cursor.to_list(length=limit)
+        
+        # Remove MongoDB _id and add rank
+        for idx, agent in enumerate(top_agents, 1):
+            agent.pop("_id", None)
+            agent["rank"] = idx
+        
+        return {
+            "leaderboard": top_agents,
+            "total": len(top_agents),
+            "category": category,
+            "min_feedback_threshold": min_feedback
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to get leaderboard: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to get leaderboard: {str(e)}"
+        )
+
+
+@router.get("/stats/global", response_model=dict)
+async def get_global_stats():
+    """
+    Get global ecosystem statistics (Phase 3)
+    
+    - Total agents
+    - Active agents  
+    - Total tasks
+    - Average reputation
+    """
+    try:
+        from app.database import get_agents_collection, get_tasks_collection
+        
+        agents_collection = get_agents_collection()
+        tasks_collection = get_tasks_collection()
+        
+        # Agent stats
+        total_agents = await agents_collection.count_documents({})
+        active_agents = await agents_collection.count_documents({"is_active": True})
+        
+        # Task stats
+        total_tasks = await tasks_collection.count_documents({})
+        completed_tasks = await tasks_collection.count_documents({"status": "completed"})
+        
+        # Average reputation
+        pipeline = [
+            {"$match": {"feedback_count": {"$gt": 0}}},
+            {"$group": {
+                "_id": None,
+                "avg_reputation": {"$avg": "$reputation_score"},
+                "total_feedback": {"$sum": "$feedback_count"}
+            }}
+        ]
+        cursor = agents_collection.aggregate(pipeline)
+        results = await cursor.to_list(length=1)
+        
+        avg_rep = 0
+        total_feedback = 0
+        if results:
+            avg_rep = results[0].get("avg_reputation", 0) / 100  # Scale back to 0-5
+            total_feedback = results[0].get("total_feedback", 0)
+        
+        return {
+            "agents": {
+                "total": total_agents,
+                "active": active_agents,
+                "inactive": total_agents - active_agents
+            },
+            "tasks": {
+                "total": total_tasks,
+                "completed": completed_tasks,
+                "completion_rate": (completed_tasks / total_tasks * 100) if total_tasks > 0 else 0
+            },
+            "reputation": {
+                "average": round(avg_rep, 2),
+                "total_feedback": total_feedback
+            }
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to get global stats: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to get global stats: {str(e)}"
+        )
+
+
 @router.post("/sync", response_model=dict)
 async def sync_agent_from_blockchain(request: dict):
     """
