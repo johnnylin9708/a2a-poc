@@ -22,31 +22,52 @@ class FeedbackRequest(BaseModel):
     private_key: str
 
 
-@router.get("/{agent_id}")
-async def get_agent_reputation(agent_id: int):
+# ========== Specific routes first (to avoid conflicts with path parameters) ==========
+
+@router.get("/all-feedbacks")
+async def get_all_feedbacks(limit: int = 50, offset: int = 0, agent_id: int = None):
     """
-    Get reputation score and statistics for an agent
+    Get all feedback history (optionally filtered by agent_id)
     """
     try:
-        # Get reputation from blockchain
-        avg_rating, feedback_count = await blockchain_service.get_reputation_score(agent_id)
+        from app.database import get_feedbacks_collection, get_agents_collection
+        feedbacks_collection = get_feedbacks_collection()
+        agents_collection = get_agents_collection()
         
-        # Get validation stats
-        validation_stats = await blockchain_service.get_validation_stats(agent_id)
+        # Build query filter
+        query = {}
+        if agent_id is not None:
+            query["agent_id"] = agent_id
+        
+        # Get total count
+        total = await feedbacks_collection.count_documents(query)
+        
+        # Get feedbacks with pagination
+        cursor = feedbacks_collection.find(query).sort("created_at", -1).skip(offset).limit(limit)
+        feedbacks = await cursor.to_list(length=limit)
+        
+        # Enrich with agent names
+        for feedback in feedbacks:
+            feedback["_id"] = str(feedback["_id"])
+            # Get agent name
+            agent = await agents_collection.find_one({"token_id": feedback["agent_id"]})
+            if agent:
+                feedback["agent_name"] = agent.get("name", f"Agent #{feedback['agent_id']}")
+            else:
+                feedback["agent_name"] = f"Agent #{feedback['agent_id']}"
         
         return {
-            "agent_id": agent_id,
-            "average_rating": avg_rating,
-            "feedback_count": feedback_count,
-            "reputation_tier": _get_reputation_tier(avg_rating, feedback_count),
-            "validation_stats": validation_stats
+            "feedbacks": feedbacks,
+            "total": total,
+            "limit": limit,
+            "offset": offset
         }
         
     except Exception as e:
-        logger.error(f"Failed to get reputation: {e}")
+        logger.error(f"Failed to get all feedbacks: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get reputation: {str(e)}"
+            detail=f"Failed to get all feedbacks: {str(e)}"
         )
 
 
@@ -58,10 +79,14 @@ async def submit_feedback(request: FeedbackRequest):
     Requires x402 payment proof to prevent spam
     """
     try:
+        from datetime import datetime, timezone
+        from app.database import get_feedbacks_collection
+        
         # Convert payment proof string to bytes32
         payment_proof_bytes = bytes.fromhex(request.payment_proof.replace("0x", ""))
         
-        await blockchain_service.submit_feedback(
+        # 1. 提交到区块链
+        tx_receipt = await blockchain_service.submit_feedback(
             agent_id=request.agent_id,
             rating=request.rating,
             comment=request.comment,
@@ -70,12 +95,30 @@ async def submit_feedback(request: FeedbackRequest):
             private_key=request.private_key
         )
         
-        logger.info(f"✅ Feedback submitted for agent {request.agent_id}")
+        # 2. 存入数据库
+        feedbacks_collection = get_feedbacks_collection()
+        feedback_doc = {
+            "agent_id": request.agent_id,
+            "rating": request.rating,
+            "comment": request.comment,
+            "reviewer_address": request.reviewer_address,
+            "payment_proof": request.payment_proof,
+            "tx_hash": tx_receipt['transactionHash'].hex() if tx_receipt else None,
+            "block_number": tx_receipt['blockNumber'] if tx_receipt else None,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "status": "confirmed"
+        }
+        
+        result = await feedbacks_collection.insert_one(feedback_doc)
+        
+        logger.info(f"✅ Feedback submitted and saved: agent {request.agent_id}, doc_id {result.inserted_id}")
         
         return {
             "message": "Feedback submitted successfully",
             "agent_id": request.agent_id,
-            "rating": request.rating
+            "rating": request.rating,
+            "feedback_id": str(result.inserted_id),
+            "tx_hash": feedback_doc.get("tx_hash")
         }
         
     except Exception as e:
@@ -177,6 +220,36 @@ async def get_reputation_leaderboard(limit: int = 50, min_feedback_count: int = 
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to get leaderboard: {str(e)}"
+        )
+
+
+# ========== Path parameter routes last (to avoid conflicts) ==========
+
+@router.get("/{agent_id}")
+async def get_agent_reputation(agent_id: int):
+    """
+    Get reputation score and statistics for an agent
+    """
+    try:
+        # Get reputation from blockchain
+        avg_rating, feedback_count = await blockchain_service.get_reputation_score(agent_id)
+        
+        # Get validation stats
+        validation_stats = await blockchain_service.get_validation_stats(agent_id)
+        
+        return {
+            "agent_id": agent_id,
+            "average_rating": avg_rating,
+            "feedback_count": feedback_count,
+            "reputation_tier": _get_reputation_tier(avg_rating, feedback_count),
+            "validation_stats": validation_stats
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to get reputation: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to get reputation: {str(e)}"
         )
 
 

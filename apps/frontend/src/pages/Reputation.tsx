@@ -1,13 +1,13 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useAccount } from 'wagmi'
-import { Star, Trophy, Award, Loader2 } from 'lucide-react'
+import { Star, Trophy, Award, Loader2, MessageSquare, ExternalLink } from 'lucide-react'
 import { agentApi } from '@/lib/api'
 import { useSubmitFeedback } from '@/hooks/useReputation'
 
 export default function Reputation() {
   const { address, isConnected } = useAccount()
-  const [activeTab, setActiveTab] = useState<'leaderboard' | 'submit'>('leaderboard')
+  const [activeTab, setActiveTab] = useState<'leaderboard' | 'submit' | 'history'>('leaderboard')
 
   return (
     <div className="max-w-6xl mx-auto">
@@ -34,6 +34,19 @@ export default function Reputation() {
           </div>
         </button>
         <button
+          onClick={() => setActiveTab('history')}
+          className={`px-6 py-3 font-medium border-b-2 transition-colors ${
+            activeTab === 'history'
+              ? 'border-primary text-primary'
+              : 'border-transparent text-muted-foreground hover:text-primary'
+          }`}
+        >
+          <div className="flex items-center gap-2">
+            <MessageSquare className="w-4 h-4" />
+            All Feedback
+          </div>
+        </button>
+        <button
           onClick={() => setActiveTab('submit')}
           className={`px-6 py-3 font-medium border-b-2 transition-colors ${
             activeTab === 'submit'
@@ -49,6 +62,7 @@ export default function Reputation() {
       </div>
 
       {activeTab === 'leaderboard' && <LeaderboardTab />}
+      {activeTab === 'history' && <AllFeedbackTab />}
       {activeTab === 'submit' && <SubmitFeedbackTab isConnected={isConnected} address={address} />}
     </div>
   )
@@ -146,6 +160,130 @@ function LeaderboardTab() {
           No agents in leaderboard yet
         </div>
       )}
+    </div>
+  )
+}
+
+function AllFeedbackTab() {
+  const [selectedAgent, setSelectedAgent] = useState<number | 'all'>('all')
+  
+  // Fetch agents for filter
+  const { data: agentsData, isLoading: isLoadingAgents } = useQuery({
+    queryKey: ['agents'],
+    queryFn: () => agentApi.discoverAgents({ limit: 100 }),
+  })
+
+  // Fetch all feedbacks (or filtered by agent)
+  const { data: feedbackData, isLoading: isLoadingFeedbacks } = useQuery({
+    queryKey: ['all-feedbacks', selectedAgent],
+    queryFn: async () => {
+      if (selectedAgent === 'all') {
+        // Use the new all-feedbacks API endpoint
+        const res = await fetch('http://127.0.0.1:8000/api/v1/reputation/all-feedbacks?limit=50')
+        if (!res.ok) throw new Error('Failed to fetch feedbacks')
+        return res.json()
+      } else {
+        // Fetch for specific agent
+        const res = await fetch(`http://127.0.0.1:8000/api/v1/reputation/${selectedAgent}/history?limit=20`)
+        if (!res.ok) throw new Error('Failed to fetch feedbacks')
+        return res.json()
+      }
+    },
+  })
+  
+  const isLoading = isLoadingAgents || isLoadingFeedbacks
+
+  if (isLoading) {
+    return (
+      <div className="text-center py-12">
+        <Loader2 className="w-8 h-8 animate-spin mx-auto" />
+        <p className="mt-4 text-muted-foreground">Loading feedbacks...</p>
+      </div>
+    )
+  }
+
+  return (
+    <div>
+      {/* Filter */}
+      <div className="mb-6 flex items-center gap-4">
+        <label className="text-sm font-medium">Filter by Agent:</label>
+        <select
+          value={selectedAgent}
+          onChange={(e) => setSelectedAgent(e.target.value === 'all' ? 'all' : parseInt(e.target.value))}
+          className="px-4 py-2 border rounded-md"
+        >
+          <option value="all">All Agents</option>
+          {agentsData?.agents?.map((agent: any) => (
+            <option key={agent.token_id} value={agent.token_id}>
+              {agent.name} (ID: {agent.token_id})
+            </option>
+          ))}
+        </select>
+        <span className="text-sm text-muted-foreground">
+          {feedbackData?.total || 0} feedback{(feedbackData?.total || 0) !== 1 ? 's' : ''}
+        </span>
+      </div>
+
+      {/* Feedbacks Grid */}
+      <div className="grid gap-4">
+        {feedbackData?.feedbacks?.length > 0 ? (
+          feedbackData.feedbacks.map((feedback: any, index: number) => (
+            <div key={index} className="bg-card border rounded-lg p-6 hover:shadow-md transition-shadow">
+              <div className="flex items-start justify-between mb-3">
+                <div>
+                  {feedback.agent_name && (
+                    <h3 className="font-semibold text-lg mb-1">{feedback.agent_name}</h3>
+                  )}
+                  <p className="text-sm text-muted-foreground">Agent ID: {feedback.agent_id}</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1">
+                    {[...Array(5)].map((_, i) => (
+                      <Star
+                        key={i}
+                        className={`w-5 h-5 ${
+                          i < feedback.rating
+                            ? 'fill-yellow-400 text-yellow-400'
+                            : 'text-gray-300'
+                        }`}
+                      />
+                    ))}
+                  </div>
+                  <span className="font-bold">{feedback.rating}/5</span>
+                </div>
+              </div>
+
+              <p className="text-sm mb-4">{feedback.comment}</p>
+
+              <div className="flex items-center justify-between text-xs text-muted-foreground pt-3 border-t">
+                <div className="flex items-center gap-4">
+                  <span>
+                    From: {feedback.reviewer_address.slice(0, 6)}...{feedback.reviewer_address.slice(-4)}
+                  </span>
+                  <span>
+                    {new Date(feedback.created_at).toLocaleString()}
+                  </span>
+                </div>
+                {feedback.tx_hash && (
+                  <a
+                    href={`https://etherscan.io/tx/${feedback.tx_hash}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1 hover:text-primary"
+                  >
+                    <ExternalLink className="w-3 h-3" />
+                    View on Chain
+                  </a>
+                )}
+              </div>
+            </div>
+          ))
+        ) : (
+          <div className="text-center py-12 text-muted-foreground">
+            No feedback found
+          </div>
+        )}
+      </div>
     </div>
   )
 }

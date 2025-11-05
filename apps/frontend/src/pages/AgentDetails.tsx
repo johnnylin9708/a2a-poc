@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Star, ExternalLink, Activity, CheckCircle, Clock, ArrowLeft, Send } from 'lucide-react'
+import { Star, ExternalLink, Activity, CheckCircle, Clock, ArrowLeft, Send, MessageSquare } from 'lucide-react'
 import { agentApi } from '@/lib/api'
 import { useAgentCard } from '@/hooks/useAgentRegistry'
 import { useReputationScore } from '@/hooks/useReputation'
@@ -24,6 +24,14 @@ export default function AgentDetails() {
   // Fetch from blockchain (on-chain data)
   const { agentCard, isLoading: isLoadingCard } = useAgentCard(agentId)
   const { averageRating, feedbackCount, isLoading: isLoadingReputation } = useReputationScore(agentId)
+
+  // Fetch agent feedback history
+  const { data: feedbackData, isLoading: isLoadingFeedback } = useQuery({
+    queryKey: ['agent-feedback', agentId],
+    queryFn: () => fetch(`http://127.0.0.1:8000/api/v1/reputation/${agentId}/history?limit=10`)
+      .then(res => res.json()),
+    enabled: !!agentId,
+  })
 
   // Fetch agent tasks
   const { data: tasksData } = useQuery({
@@ -290,6 +298,67 @@ export default function AgentDetails() {
                 <p className="text-xs text-muted-foreground">
                   Created {new Date(task.created_at).toLocaleString()}
                 </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Feedback History */}
+      {!isLoadingFeedback && feedbackData?.feedbacks && feedbackData.feedbacks.length > 0 && (
+        <div className="bg-card rounded-lg border p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <MessageSquare className="w-5 h-5 text-primary" />
+            <h2 className="text-xl font-semibold">Feedback History</h2>
+            <span className="text-sm text-muted-foreground">
+              ({feedbackData.total} total)
+            </span>
+          </div>
+          <div className="space-y-4">
+            {feedbackData.feedbacks.map((feedback: any, index: number) => (
+              <div key={index} className="border rounded-lg p-4 hover:bg-secondary/50 transition-colors">
+                <div className="flex items-start justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    {/* Star Rating */}
+                    <div className="flex items-center gap-1">
+                      {[...Array(5)].map((_, i) => (
+                        <Star
+                          key={i}
+                          className={`w-4 h-4 ${
+                            i < feedback.rating
+                              ? 'fill-yellow-400 text-yellow-400'
+                              : 'text-gray-300'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                    <span className="font-semibold text-sm">{feedback.rating}/5</span>
+                  </div>
+                  <span className="text-xs text-muted-foreground">
+                    {new Date(feedback.created_at).toLocaleDateString()}
+                  </span>
+                </div>
+                
+                {/* Comment */}
+                <p className="text-sm mb-3">{feedback.comment}</p>
+                
+                {/* Footer */}
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <div className="flex items-center gap-2">
+                    <span>From: {feedback.reviewer_address.slice(0, 6)}...{feedback.reviewer_address.slice(-4)}</span>
+                  </div>
+                  {feedback.tx_hash && (
+                    <a
+                      href={`https://etherscan.io/tx/${feedback.tx_hash}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-1 hover:text-primary"
+                    >
+                      <ExternalLink className="w-3 h-3" />
+                      View on Chain
+                    </a>
+                  )}
+                </div>
               </div>
             ))}
           </div>
