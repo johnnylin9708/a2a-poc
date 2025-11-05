@@ -1,0 +1,14 @@
+{
+  "name": "@a2a/backend",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A2A Agent Ecosystem Backend API",
+  "scripts": {
+    "dev": "sh -c 'source venv/bin/activate 2>/dev/null || true && python -m app.main'",
+    "dev:windows": "venv\\Scripts\\activate && python -m app.main",
+    "test": "pytest",
+    "lint": "black . && flake8 .",
+    "format": "black ."
+  }
+}
+

@@ -1,0 +1,32 @@
+{
+  "name": "a2a-agent-ecosystem",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A2A + ERC-8004 Agent Ecosystem Infrastructure",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "turbo run dev",
+    "dev:all": "turbo run dev --parallel",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "clean": "turbo run clean",
+    "test": "turbo run test",
+    "contracts:dev": "pnpm --filter @a2a/contracts dev",
+    "contracts:deploy": "pnpm --filter @a2a/contracts deploy:local",
+    "backend:dev": "pnpm --filter @a2a/backend dev",
+    "frontend:dev": "pnpm --filter @a2a/frontend dev"
+  },
+  "devDependencies": {
+    "turbo": "^2.0.0",
+    "prettier": "^3.0.0",
+    "typescript": "^5.2.0"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
+  },
+  "packageManager": "pnpm@8.15.0"
+}

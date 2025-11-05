@@ -1,0 +1,78 @@
+# A2A Agent Ecosystem - Cursor Rules
+
+This is a Monorepo project for building an Agent-to-Agent ecosystem infrastructure.
+
+## Project Structure
+
+- `apps/contracts/` - Solidity smart contracts (ERC-8004)
+- `apps/backend/` - Python FastAPI backend
+- `apps/frontend/` - React + Vite frontend
+- `packages/` - Shared packages
+
+## Tech Stack
+
+### Contracts
+- Solidity ^0.8.20
+- Hardhat
+- OpenZeppelin Contracts
+- TypeScript for scripts
+
+### Backend
+- Python 3.11+
+- FastAPI
+- Motor (async MongoDB)
+- Web3.py
+- Pydantic
+
+### Frontend
+- React 18
+- TypeScript
+- Vite
+- TailwindCSS + shadcn/ui
+- wagmi + viem
+- React Router
+- TanStack Query
+
+## Code Standards
+
+### Solidity
+- Follow OpenZeppelin patterns
+- Use NatSpec comments
+- Gas optimization important
+- Security first
+
+### Python
+- Type hints required
+- Follow PEP 8
+- Async/await where possible
+- Pydantic for validation
+
+### TypeScript/React
+- Functional components
+- Hooks over classes
+- Type everything
+- Use const over let
+
+## Development Workflow
+
+1. Smart contracts first (compile, test, deploy)
+2. Backend API implementation
+3. Frontend integration
+4. End-to-end testing
+
+## Testing
+
+- Contracts: `cd apps/contracts && pnpm test`
+- Backend: `cd apps/backend && pytest`
+- Frontend: `cd apps/frontend && pnpm test`
+
+## Important Notes
+
+- Never commit private keys
+- Always use environment variables
+- Test on local network before deploying
+- Update contract addresses after deployment
+- Keep API documentation updated
+- Follow ERC-8004 standard
+- Maintain blockchain state consistency
+
