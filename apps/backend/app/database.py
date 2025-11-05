@@ -80,6 +80,22 @@ async def create_indexes() -> None:
         await mongo_db.validations.create_index("validation_type")
         await mongo_db.validations.create_index("created_at")
         
+        # Prompt templates collection indexes
+        await mongo_db.prompt_templates.create_index("template_id", unique=True)
+        await mongo_db.prompt_templates.create_index("agent_id")
+        await mongo_db.prompt_templates.create_index("category")
+        await mongo_db.prompt_templates.create_index("is_public")
+        await mongo_db.prompt_templates.create_index("tags")
+        await mongo_db.prompt_templates.create_index("usage_count")
+        
+        # Payments collection indexes (x402)
+        await mongo_db.payments.create_index("payment_id", unique=True)
+        await mongo_db.payments.create_index("agent_id")
+        await mongo_db.payments.create_index("task_id")
+        await mongo_db.payments.create_index("payment_proof.transaction_hash", unique=True)
+        await mongo_db.payments.create_index("is_verified")
+        await mongo_db.payments.create_index("created_at")
+        
         logger.info("✅ Database indexes created")
         
     except Exception as e:

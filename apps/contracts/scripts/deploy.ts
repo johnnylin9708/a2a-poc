@@ -17,10 +17,18 @@ async function main() {
   const identityAddress = await identityRegistry.getAddress();
   console.log("✅ AgentIdentityRegistry deployed to:", identityAddress);
 
-  // Deploy ReputationRegistry
+  // Deploy PaymentRegistry (x402)
+  console.log("\n📝 Deploying PaymentRegistry (x402)...");
+  const PaymentRegistry = await ethers.getContractFactory("PaymentRegistry");
+  const paymentRegistry = await PaymentRegistry.deploy();
+  await paymentRegistry.waitForDeployment();
+  const paymentAddress = await paymentRegistry.getAddress();
+  console.log("✅ PaymentRegistry deployed to:", paymentAddress);
+
+  // Deploy ReputationRegistry (requires PaymentRegistry address)
   console.log("\n📝 Deploying ReputationRegistry...");
   const ReputationRegistry = await ethers.getContractFactory("ReputationRegistry");
-  const reputationRegistry = await ReputationRegistry.deploy();
+  const reputationRegistry = await ReputationRegistry.deploy(paymentAddress);
   await reputationRegistry.waitForDeployment();
   const reputationAddress = await reputationRegistry.getAddress();
   console.log("✅ ReputationRegistry deployed to:", reputationAddress);
@@ -41,6 +49,7 @@ async function main() {
     timestamp: new Date().toISOString(),
     contracts: {
       AgentIdentityRegistry: identityAddress,
+      PaymentRegistry: paymentAddress,
       ReputationRegistry: reputationAddress,
       ValidationRegistry: validationAddress,
     },
@@ -72,15 +81,17 @@ async function main() {
   console.log("Deployer:", deployer.address);
   console.log("\n📜 Contract Addresses:");
   console.log("  AgentIdentityRegistry:", identityAddress);
-  console.log("  ReputationRegistry:", reputationAddress);
-  console.log("  ValidationRegistry:", validationAddress);
+  console.log("  PaymentRegistry:      ", paymentAddress);
+  console.log("  ReputationRegistry:   ", reputationAddress);
+  console.log("  ValidationRegistry:   ", validationAddress);
   console.log("=".repeat(60) + "\n");
 
   // Verification instructions
   if (deploymentInfo.network !== "hardhat" && deploymentInfo.network !== "localhost") {
     console.log("🔍 To verify contracts on Etherscan, run:");
     console.log(`  npx hardhat verify --network ${deploymentInfo.network} ${identityAddress}`);
-    console.log(`  npx hardhat verify --network ${deploymentInfo.network} ${reputationAddress}`);
+    console.log(`  npx hardhat verify --network ${deploymentInfo.network} ${paymentAddress}`);
+    console.log(`  npx hardhat verify --network ${deploymentInfo.network} ${reputationAddress} ${paymentAddress}`);
     console.log(`  npx hardhat verify --network ${deploymentInfo.network} ${validationAddress}\n`);
   }
 }

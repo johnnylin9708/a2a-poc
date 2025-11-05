@@ -11,7 +11,7 @@ from contextlib import asynccontextmanager
 
 from app.config import settings
 from app.database import connect_to_mongo, close_mongo_connection
-from app.api.v1 import agents, groups, reputation, validation, ipfs
+from app.api.v1 import agents, groups, reputation, validation, ipfs, tasks, prompts, payments
 
 # Configure logging
 logging.basicConfig(
@@ -84,6 +84,9 @@ async def health_check():
 # Include routers
 app.include_router(agents.router, prefix="/api/v1/agents", tags=["Agents"])
 app.include_router(groups.router, prefix="/api/v1/groups", tags=["Groups"])
+app.include_router(tasks.router, prefix="/api/v1/tasks", tags=["Tasks"])
+app.include_router(prompts.router, prefix="/api/v1/prompts", tags=["Prompts"])
+app.include_router(payments.router, prefix="/api/v1/payments", tags=["Payments"])
 app.include_router(reputation.router, prefix="/api/v1/reputation", tags=["Reputation"])
 app.include_router(validation.router, prefix="/api/v1/validation", tags=["Validation"])
 app.include_router(ipfs.router, prefix="/api/v1/ipfs", tags=["IPFS"])

@@ -217,6 +217,41 @@ async def delegate_task_to_group(group_id: str, request: GroupTaskRequest):
         )
 
 
+@router.post("/{group_id}/remove-agent", response_model=dict)
+async def remove_agent_from_group(group_id: str, request: GroupAddAgentRequest):
+    """Remove an agent from a group"""
+    try:
+        groups_collection = get_groups_collection()
+        
+        # Update group
+        result = await groups_collection.update_one(
+            {"group_id": group_id},
+            {
+                "$pull": {"member_agents": request.agent_id},
+                "$set": {"updated_at": datetime.utcnow()}
+            }
+        )
+        
+        if result.matched_count == 0:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Group {group_id} not found"
+            )
+        
+        logger.info(f"✅ Agent {request.agent_id} removed from group {group_id}")
+        
+        return {"message": "Agent removed from group successfully"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to remove agent from group: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to remove agent from group: {str(e)}"
+        )
+
+
 @router.get("/", response_model=dict)
 async def list_groups(limit: int = 20, offset: int = 0):
     """List all groups"""

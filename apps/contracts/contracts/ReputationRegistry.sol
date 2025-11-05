@@ -3,12 +3,30 @@ pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 
+interface IPaymentRegistry {
+    function getPayment(bytes32 paymentId) external view returns (
+        uint256 agentId,
+        address payer,
+        address payee,
+        uint256 amount,
+        address token,
+        string memory serviceDescription,
+        string memory taskId,
+        uint256 timestamp,
+        bytes32 txHash,
+        bool verified,
+        bool refunded
+    );
+    function isTransactionRecorded(bytes32 txHash) external view returns (bool);
+}
+
 /**
  * @title ReputationRegistry
  * @dev ERC-8004 Implementation - Reputation Registry
  * Decentralized feedback system tied to payment proofs (x402)
  */
 contract ReputationRegistry is Ownable {
+    IPaymentRegistry public paymentRegistry;
     struct Feedback {
         uint256 agentId;
         address reviewer;
@@ -53,14 +71,26 @@ contract ReputationRegistry is Ownable {
     
     event ReviewerWhitelisted(address indexed reviewer);
 
-    constructor() Ownable(msg.sender) {}
+    constructor(address _paymentRegistry) Ownable(msg.sender) {
+        require(_paymentRegistry != address(0), "Invalid payment registry address");
+        paymentRegistry = IPaymentRegistry(_paymentRegistry);
+    }
 
     /**
-     * @dev Submit feedback for an agent (must have payment proof)
+     * @dev Update payment registry address (owner only)
+     * @param _paymentRegistry New payment registry address
+     */
+    function setPaymentRegistry(address _paymentRegistry) external onlyOwner {
+        require(_paymentRegistry != address(0), "Invalid payment registry address");
+        paymentRegistry = IPaymentRegistry(_paymentRegistry);
+    }
+
+    /**
+     * @dev Submit feedback for an agent (must have valid payment proof from PaymentRegistry)
      * @param agentId The agent's token ID
      * @param rating Rating from 1 to 5
      * @param comment Feedback comment
-     * @param paymentProof x402 payment proof hash
+     * @param paymentProof x402 payment ID from PaymentRegistry
      */
     function submitFeedback(
         uint256 agentId,
@@ -73,6 +103,26 @@ contract ReputationRegistry is Ownable {
         require(!blacklistedReviewers[msg.sender], "Reviewer is blacklisted");
         require(agentId > 0, "Invalid agent ID");
 
+        // Verify payment exists and is valid
+        (
+            uint256 paymentAgentId,
+            address payer,
+            ,  // payee
+            ,  // amount
+            ,  // token
+            ,  // serviceDescription
+            ,  // taskId
+            ,  // timestamp
+            ,  // txHash
+            bool verified,
+            bool refunded
+        ) = paymentRegistry.getPayment(paymentProof);
+
+        require(paymentAgentId == agentId, "Payment is for different agent");
+        require(payer == msg.sender, "Only payer can submit feedback");
+        require(verified, "Payment not verified yet");
+        require(!refunded, "Payment was refunded");
+
         usedPaymentProofs[paymentProof] = true;
 
         Feedback memory newFeedback = Feedback({
@@ -82,7 +132,7 @@ contract ReputationRegistry is Ownable {
             comment: comment,
             paymentProof: paymentProof,
             timestamp: block.timestamp,
-            verified: true  // Auto-verified if payment proof is valid
+            verified: true  // Auto-verified since payment is verified
         });
 
         agentFeedbacks[agentId].push(newFeedback);

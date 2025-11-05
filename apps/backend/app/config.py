@@ -44,6 +44,10 @@ class Settings(BaseSettings):
         default="",
         description="AgentIdentityRegistry contract address"
     )
+    PAYMENT_REGISTRY_ADDRESS: str = Field(
+        default="",
+        description="PaymentRegistry contract address (x402)"
+    )
     REPUTATION_REGISTRY_ADDRESS: str = Field(
         default="",
         description="ReputationRegistry contract address"
